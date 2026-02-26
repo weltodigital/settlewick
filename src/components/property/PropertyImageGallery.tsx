@@ -3,7 +3,17 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { X, ChevronLeft, ChevronRight, Maximize2, Grid, MapPin, Play, Pause, Volume2, VolumeX, Expand, RotateCcw, Eye, Video } from 'lucide-react'
-import type { PropertyImage } from '@prisma/client'
+interface PropertyImage {
+  id: string
+  createdAt: Date
+  caption: string | null
+  propertyId: string
+  imageUrl: string
+  displayOrder: number
+  isFloorplan: boolean
+  isPrimary: boolean
+  roomTag: string | null
+}
 
 interface PropertyImageGalleryProps {
   images: PropertyImage[]
