@@ -163,14 +163,14 @@ export default function FilterPanel({
                   <div className="grid grid-cols-2 gap-3">
                     <input
                       type="number"
-                      placeholder={filters.listingType === 'SALE' ? 'Min £' : 'Min £ pcm'}
+                      placeholder={filters.listingType === 'sale' ? 'Min £' : 'Min £ pcm'}
                       value={filters.priceMin || ''}
                       onChange={(e) => updateFilter('priceMin', e.target.value ? Number(e.target.value) : undefined)}
                       className="input-field text-sm"
                     />
                     <input
                       type="number"
-                      placeholder={filters.listingType === 'SALE' ? 'Max £' : 'Max £ pcm'}
+                      placeholder={filters.listingType === 'sale' ? 'Max £' : 'Max £ pcm'}
                       value={filters.priceMax || ''}
                       onChange={(e) => updateFilter('priceMax', e.target.value ? Number(e.target.value) : undefined)}
                       className="input-field text-sm"
@@ -336,7 +336,7 @@ export default function FilterPanel({
             </FilterSection>
 
             {/* Rental Specific Filters */}
-            {filters.listingType === 'RENT' && (
+            {filters.listingType === 'rent' && (
               <FilterSection title="Rental Preferences" sectionKey="rental">
                 <div className="space-y-4">
                   <div>

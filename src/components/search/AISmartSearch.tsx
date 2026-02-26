@@ -121,16 +121,16 @@ export default function AISmartSearch({ onSearchExecute, currentFilters, placeho
 
     // Extract property types
     const propertyTypes = {
-      'terraced': 'TERRACED',
-      'terrace': 'TERRACED',
-      'semi-detached': 'SEMI_DETACHED',
-      'semi': 'SEMI_DETACHED',
-      'detached': 'DETACHED',
-      'flat': 'FLAT',
-      'apartment': 'FLAT',
-      'maisonette': 'MAISONETTE',
-      'bungalow': 'BUNGALOW',
-      'house': 'HOUSE'
+      'terraced': 'terraced',
+      'terrace': 'terraced',
+      'semi-detached': 'semi_detached',
+      'semi': 'semi_detached',
+      'detached': 'detached',
+      'flat': 'flat',
+      'apartment': 'flat',
+      'maisonette': 'maisonette',
+      'bungalow': 'bungalow',
+      'house': 'terraced'
     }
 
     const foundType = Object.keys(propertyTypes).find(type => lowercaseQuery.includes(type))
@@ -195,8 +195,8 @@ export default function AISmartSearch({ onSearchExecute, currentFilters, placeho
           filters: {
             ...currentFilters,
             bedrooms: [3, 4],
-            gardenType: ['PRIVATE'],
-            propertyTypes: ['TERRACED', 'SEMI_DETACHED']
+            gardenType: ['private'],
+            propertyTypes: ['terraced', 'semi_detached']
           },
           icon: <Target className="w-4 h-4 text-success" />
         }
@@ -303,7 +303,7 @@ export default function AISmartSearch({ onSearchExecute, currentFilters, placeho
             ...currentFilters,
             bedrooms: [3, 4, 5],
             gardenType: ['PRIVATE'],
-            propertyTypes: ['TERRACED', 'SEMI_DETACHED', 'DETACHED']
+            propertyTypes: ['terraced', 'semi_detached', 'detached']
           }
         },
         'professional': {
@@ -321,7 +321,7 @@ export default function AISmartSearch({ onSearchExecute, currentFilters, placeho
           filters: {
             ...currentFilters,
             bedrooms: [1, 2, 3],
-            propertyTypes: ['FLAT', 'TERRACED']
+            propertyTypes: ['flat', 'terraced']
           }
         }
       }

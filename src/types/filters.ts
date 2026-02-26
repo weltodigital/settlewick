@@ -1,13 +1,12 @@
-import type {
-  ListingType,
-  PropertyType,
-  Tenure,
-  Furnished,
-  HeatingType,
-  ParkingType,
-  GardenType,
-  Orientation
-} from '@prisma/client'
+// Type definitions with backward compatibility for Prisma -> Supabase migration
+export type ListingType = 'sale' | 'rent' | 'SALE' | 'RENT'
+export type PropertyType = 'detached' | 'semi_detached' | 'terraced' | 'flat' | 'bungalow' | 'maisonette' | 'cottage' | 'town_house' | 'park_home' | 'land' | 'other' | 'DETACHED' | 'SEMI_DETACHED' | 'TERRACED' | 'FLAT' | 'BUNGALOW' | 'MAISONETTE' | 'COTTAGE' | 'TOWN_HOUSE' | 'PARK_HOME' | 'LAND' | 'OTHER'
+export type Tenure = 'freehold' | 'leasehold' | 'share_of_freehold' | 'commonhold' | 'FREEHOLD' | 'LEASEHOLD' | 'SHARE_OF_FREEHOLD' | 'COMMONHOLD'
+export type Furnished = 'furnished' | 'unfurnished' | 'part_furnished' | 'FURNISHED' | 'UNFURNISHED' | 'PART_FURNISHED'
+export type HeatingType = 'gas_central' | 'electric' | 'oil' | 'heat_pump' | 'biomass' | 'district' | 'other' | 'GAS_CENTRAL' | 'ELECTRIC' | 'OIL' | 'HEAT_PUMP' | 'BIOMASS' | 'DISTRICT' | 'OTHER'
+export type ParkingType = 'driveway' | 'garage' | 'allocated' | 'on_street' | 'none' | 'DRIVEWAY' | 'GARAGE' | 'ALLOCATED' | 'ON_STREET' | 'NONE'
+export type GardenType = 'private' | 'communal' | 'none' | 'PRIVATE' | 'COMMUNAL' | 'NONE'
+export type Orientation = 'north' | 'south' | 'east' | 'west' | 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
 
 export interface PropertyFilters {
   // Basic
