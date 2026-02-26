@@ -1,8 +1,13 @@
-import { prisma } from './db'
-import { distanceQuery, boundingBoxQuery, polygonQuery } from './geo'
+import { createClient as createServerClient } from './supabase/server'
 import type { PropertyFilters } from '@/types/filters'
-import type { PropertyWithDetails } from '@/types/property'
-import type { Prisma } from '@prisma/client'
+import type { Database } from '@/types/database'
+
+type Property = Database['public']['Tables']['properties']['Row']
+type PropertyWithDetails = Property & {
+  agent: Database['public']['Tables']['agents']['Row']
+  images: Database['public']['Tables']['property_images']['Row'][]
+  priceHistory: Database['public']['Tables']['property_price_history']['Row'][]
+}
 
 export async function searchProperties(
   filters: PropertyFilters
@@ -13,15 +18,16 @@ export async function searchProperties(
   totalPages: number
   filters: PropertyFilters
 }> {
+  const supabase = createServerClient()
+
   const {
-    listingType = 'SALE',
+    listingType = 'sale',
     location,
     priceMin,
     priceMax,
     bedrooms,
     bathrooms,
     propertyType,
-    // ... many more filters
     latitude,
     longitude,
     radius,
@@ -31,201 +37,274 @@ export async function searchProperties(
     page = 1,
     limit = 20,
     excludeHidden = false,
-    userId
+    userId,
+    // Boolean features
+    chainFree,
+    newBuild,
+    periodProperty,
+    modern,
+    cottage,
+    utilityRoom,
+    basement,
+    conservatory,
+    homeOffice,
+    enSuite,
+    bathtub,
+    patio,
+    garage,
+    balcony,
+    // Rental specific
+    furnished,
+    petsAllowed,
+    billsIncluded,
+    // Other filters
+    tenure,
+    epcRating,
+    gardenType,
+    parkingType
   } = filters
 
-  // Build where clause
-  const whereClause: Prisma.PropertyWhereInput = {
-    listingType,
-    status: 'AVAILABLE'
+  // Handle spatial queries first
+  if (latitude && longitude && radius) {
+    const { data: spatialResults, error } = await supabase.rpc('search_properties_by_radius', {
+      lat: latitude,
+      lng: longitude,
+      radius_miles: radius,
+      filters: { listing_type: listingType }
+    })
+
+    if (error) {
+      console.error('Spatial query error:', error)
+      // Fallback to regular query
+    } else if (spatialResults) {
+      // Get full property details for spatial results
+      const propertyIds = spatialResults.slice((page - 1) * limit, page * limit).map(p => p.id)
+
+      if (propertyIds.length === 0) {
+        return {
+          properties: [],
+          total: 0,
+          page,
+          totalPages: 0,
+          filters
+        }
+      }
+
+      const { data: properties, error: propertiesError } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          agent:agents(*),
+          images:property_images(*),
+          priceHistory:property_price_history(*)
+        `)
+        .in('id', propertyIds)
+
+      if (propertiesError) {
+        console.error('Error fetching spatial properties:', propertiesError)
+      } else {
+        return {
+          properties: properties as PropertyWithDetails[],
+          total: spatialResults.length,
+          page,
+          totalPages: Math.ceil(spatialResults.length / limit),
+          filters
+        }
+      }
+    }
   }
 
+  if (boundingBox) {
+    const { data: spatialResults, error } = await supabase.rpc('search_properties_by_bounds', {
+      min_lat: boundingBox.swLat,
+      min_lng: boundingBox.swLng,
+      max_lat: boundingBox.neLat,
+      max_lng: boundingBox.neLng,
+      filters: { listing_type: listingType }
+    })
+
+    if (error) {
+      console.error('Bounding box query error:', error)
+    } else if (spatialResults) {
+      const propertyIds = spatialResults.slice((page - 1) * limit, page * limit).map(p => p.id)
+
+      if (propertyIds.length === 0) {
+        return {
+          properties: [],
+          total: 0,
+          page,
+          totalPages: 0,
+          filters
+        }
+      }
+
+      const { data: properties, error: propertiesError } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          agent:agents(*),
+          images:property_images(*),
+          priceHistory:property_price_history(*)
+        `)
+        .in('id', propertyIds)
+
+      if (propertiesError) {
+        console.error('Error fetching bounded properties:', propertiesError)
+      } else {
+        return {
+          properties: properties as PropertyWithDetails[],
+          total: spatialResults.length,
+          page,
+          totalPages: Math.ceil(spatialResults.length / limit),
+          filters
+        }
+      }
+    }
+  }
+
+  // Build regular query
+  let query = supabase
+    .from('properties')
+    .select(`
+      *,
+      agent:agents(*),
+      images:property_images(*),
+      priceHistory:property_price_history(*)
+    `, { count: 'exact' })
+    .eq('listing_type', listingType)
+    .eq('status', 'available')
+
   // Price range
-  if (priceMin || priceMax) {
-    whereClause.price = {}
-    if (priceMin) whereClause.price.gte = priceMin * 100 // convert to pence
-    if (priceMax) whereClause.price.lte = priceMax * 100
+  if (priceMin) {
+    query = query.gte('price', priceMin * 100) // convert to pence
+  }
+  if (priceMax) {
+    query = query.lte('price', priceMax * 100)
   }
 
   // Bedrooms
   if (bedrooms && bedrooms.length > 0) {
-    whereClause.bedrooms = { in: bedrooms }
+    query = query.in('bedrooms', bedrooms)
   }
 
   // Bathrooms
-  if (bathrooms && (bathrooms as any).length > 0) {
-    whereClause.bathrooms = { in: bathrooms as any }
+  if (bathrooms) {
+    if (Array.isArray(bathrooms)) {
+      query = query.in('bathrooms', bathrooms)
+    } else if (typeof bathrooms === 'object' && bathrooms.min) {
+      query = query.gte('bathrooms', bathrooms.min)
+    }
   }
 
   // Property types
   if (propertyType && propertyType.length > 0) {
-    whereClause.propertyType = { in: propertyType }
+    query = query.in('property_type', propertyType)
   }
 
   // Boolean features
-  const booleanFeatures = [
-    'chainFree', 'newBuild', 'periodProperty', 'modern', 'cottage',
-    'utilityRoom', 'basement', 'conservatory', 'homeOffice',
-    'enSuite', 'bathtub', 'patio', 'garage', 'balcony'
-  ] as const
+  if (chainFree === true) query = query.eq('chain_free', true)
+  if (newBuild === true) query = query.eq('new_build', true)
+  if (periodProperty === true) query = query.eq('period_property', true)
+  if (modern === true) query = query.eq('modern', true)
+  if (cottage === true) query = query.eq('cottage', true)
+  if (utilityRoom === true) query = query.eq('utility_room', true)
+  if (basement === true) query = query.eq('basement', true)
+  if (conservatory === true) query = query.eq('conservatory', true)
+  if (homeOffice === true) query = query.eq('home_office', true)
+  if (enSuite === true) query = query.eq('en_suite', true)
+  if (bathtub === true) query = query.eq('bathtub', true)
+  if (patio === true) query = query.eq('patio', true)
+  if (garage === true) query = query.eq('garage', true)
+  if (balcony === true) query = query.eq('balcony', true)
 
-  booleanFeatures.forEach((feature) => {
-    if (filters[feature] === true) {
-      whereClause[feature] = true
-    }
-  })
+  // Tenure
+  if (tenure && tenure.length > 0) {
+    query = query.in('tenure', tenure)
+  }
+
+  // EPC rating
+  if (epcRating && epcRating.length > 0) {
+    query = query.in('epc_rating', epcRating)
+  }
+
+  // Garden type
+  if (gardenType && gardenType.length > 0) {
+    query = query.in('garden_type', gardenType)
+  }
+
+  // Parking type
+  if (parkingType && parkingType.length > 0) {
+    query = query.in('parking_type', parkingType)
+  }
+
+  // Rental specific filters
+  if (furnished && furnished.length > 0) {
+    query = query.in('furnished', furnished)
+  }
+  if (petsAllowed === true) query = query.eq('pets_allowed', true)
+  if (billsIncluded === true) query = query.eq('bills_included', true)
 
   // Location search (text-based)
   if (location) {
-    whereClause.OR = [
-      {
-        addressTown: {
-          contains: location,
-          mode: 'insensitive'
-        }
-      },
-      {
-        addressPostcode: {
-          contains: location,
-          mode: 'insensitive'
-        }
-      },
-      {
-        addressLine1: {
-          contains: location,
-          mode: 'insensitive'
-        }
-      }
-    ]
+    query = query.or(
+      `address_town.ilike.%${location}%,address_postcode.ilike.%${location}%,address_line_1.ilike.%${location}%`
+    )
   }
 
   // Exclude hidden properties for logged-in users
   if (excludeHidden && userId) {
-    whereClause.hiddenBy = {
-      none: {
-        userId
-      }
+    const { data: hiddenPropertyIds } = await supabase
+      .from('hidden_properties')
+      .select('property_id')
+      .eq('user_id', userId)
+
+    if (hiddenPropertyIds && hiddenPropertyIds.length > 0) {
+      query = query.not('id', 'in', `(${hiddenPropertyIds.map(h => `'${h.property_id}'`).join(',')})`)
     }
   }
 
-  // For spatial queries, we'll need to use raw SQL
-  let spatialCondition = ''
-  if (latitude && longitude && radius) {
-    spatialCondition = distanceQuery(latitude, longitude, radius)
-  } else if (boundingBox) {
-    spatialCondition = boundingBoxQuery(
-      boundingBox.swLat,
-      boundingBox.swLng,
-      boundingBox.neLat,
-      boundingBox.neLng
-    )
-  } else if (polygon && polygon.length > 0) {
-    spatialCondition = polygonQuery(polygon)
-  }
-
-  // Build order clause
-  let orderBy: Prisma.PropertyOrderByWithRelationInput[] = []
-
+  // Sorting
   switch (sortBy) {
     case 'newest':
-      orderBy = [{ listedDate: 'desc' }]
+      query = query.order('listed_date', { ascending: false })
       break
     case 'price_low':
-      orderBy = [{ price: 'asc' }]
+      query = query.order('price', { ascending: true })
       break
     case 'price_high':
-      orderBy = [{ price: 'desc' }]
+      query = query.order('price', { ascending: false })
       break
     case 'most_reduced':
-      orderBy = [
-        { priceChangedDate: 'desc' },
-        { listedDate: 'desc' }
-      ]
+      query = query.order('price_changed_date', { ascending: false, nullsLast: true })
+        .order('listed_date', { ascending: false })
       break
     default:
-      orderBy = [{ listedDate: 'desc' }]
+      query = query.order('listed_date', { ascending: false })
   }
 
-  const skip = (page - 1) * limit
+  // Pagination
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+  query = query.range(from, to)
 
-  // Execute queries
-  let properties: PropertyWithDetails[]
-  let total: number
+  const { data: properties, error, count } = await query
 
-  if (spatialCondition) {
-    // Use raw SQL for spatial queries
-    const spatialQuery = `
-      SELECT p.*,
-        CASE WHEN p.longitude IS NOT NULL AND p.latitude IS NOT NULL
-        THEN ST_Distance(
-          ST_GeomFromText('POINT(' || p.longitude || ' ' || p.latitude || ')', 4326),
-          ST_GeomFromText('POINT(${longitude} ${latitude})', 4326)
-        ) * 111319.9 -- Convert to meters approximation
-        END as distance
-      FROM properties p
-      WHERE p.listing_type = '${listingType}'
-        AND p.status = 'AVAILABLE'
-        ${spatialCondition ? `AND ${spatialCondition}` : ''}
-      ORDER BY ${sortBy === 'nearest' ? 'distance ASC' : 'p.listed_date DESC'}
-      LIMIT ${limit} OFFSET ${skip}
-    `
-
-    const countQuery = `
-      SELECT COUNT(*)
-      FROM properties p
-      WHERE p.listing_type = '${listingType}'
-        AND p.status = 'AVAILABLE'
-        ${spatialCondition ? `AND ${spatialCondition}` : ''}
-    `
-
-    // For now, fallback to regular Prisma query
-    // In production, you'd implement the raw spatial queries
-    properties = await prisma.property.findMany({
-      where: whereClause,
-      include: {
-        agent: true,
-        images: {
-          orderBy: { displayOrder: 'asc' }
-        },
-        priceHistory: {
-          orderBy: { date: 'desc' }
-        }
-      },
-      orderBy,
-      skip,
-      take: limit
-    }) as PropertyWithDetails[]
-
-    total = await prisma.property.count({ where: whereClause })
-  } else {
-    // Regular Prisma queries
-    const [propertiesResult, totalResult] = await Promise.all([
-      prisma.property.findMany({
-        where: whereClause,
-        include: {
-          agent: true,
-          images: {
-            orderBy: { displayOrder: 'asc' }
-          },
-          priceHistory: {
-            orderBy: { date: 'desc' }
-          }
-        },
-        orderBy,
-        skip,
-        take: limit
-      }),
-      prisma.property.count({ where: whereClause })
-    ])
-
-    properties = propertiesResult as PropertyWithDetails[]
-    total = totalResult
+  if (error) {
+    console.error('Property search error:', error)
+    return {
+      properties: [],
+      total: 0,
+      page,
+      totalPages: 0,
+      filters
+    }
   }
 
+  const total = count || 0
   const totalPages = Math.ceil(total / limit)
 
   return {
-    properties,
+    properties: properties as PropertyWithDetails[] || [],
     total,
     page,
     totalPages,
@@ -234,45 +313,60 @@ export async function searchProperties(
 }
 
 export async function getFilterCounts(baseFilters: PropertyFilters) {
-  // Get counts for various filter options to show in the UI
-  const { listingType = 'SALE', location } = baseFilters
+  const supabase = createServerClient()
 
-  const baseWhere: Prisma.PropertyWhereInput = {
-    listingType,
-    status: 'AVAILABLE'
-  }
+  // Get counts for various filter options to show in the UI
+  const { listingType = 'sale', location } = baseFilters
+
+  let baseQuery = supabase
+    .from('properties')
+    .select('bedrooms, property_type')
+    .eq('listing_type', listingType)
+    .eq('status', 'available')
 
   if (location) {
-    baseWhere.OR = [
-      { addressTown: { contains: location, mode: 'insensitive' } },
-      { addressPostcode: { contains: location, mode: 'insensitive' } },
-      { addressLine1: { contains: location, mode: 'insensitive' } }
-    ]
+    baseQuery = baseQuery.or(
+      `address_town.ilike.%${location}%,address_postcode.ilike.%${location}%,address_line_1.ilike.%${location}%`
+    )
   }
 
-  // Get bedroom counts
-  const bedroomCounts = await prisma.property.groupBy({
-    by: ['bedrooms'],
-    where: baseWhere,
-    _count: true,
-    orderBy: { bedrooms: 'asc' }
-  })
+  const { data: properties, error } = await baseQuery
 
-  // Get property type counts
-  const propertyTypeCounts = await prisma.property.groupBy({
-    by: ['propertyType'],
-    where: baseWhere,
-    _count: true
+  if (error || !properties) {
+    console.error('Error fetching filter counts:', error)
+    return {
+      bedrooms: [],
+      propertyTypes: []
+    }
+  }
+
+  // Count bedrooms
+  const bedroomCounts: Record<number, number> = {}
+  const propertyTypeCounts: Record<string, number> = {}
+
+  properties.forEach(property => {
+    // Count bedrooms
+    if (property.bedrooms !== null) {
+      bedroomCounts[property.bedrooms] = (bedroomCounts[property.bedrooms] || 0) + 1
+    }
+
+    // Count property types
+    if (property.property_type) {
+      propertyTypeCounts[property.property_type] = (propertyTypeCounts[property.property_type] || 0) + 1
+    }
   })
 
   return {
-    bedrooms: bedroomCounts.map(item => ({
-      value: item.bedrooms || 0,
-      count: item._count
-    })),
-    propertyTypes: propertyTypeCounts.map(item => ({
-      value: item.propertyType,
-      count: item._count
-    }))
+    bedrooms: Object.entries(bedroomCounts)
+      .map(([bedrooms, count]) => ({
+        value: parseInt(bedrooms),
+        count
+      }))
+      .sort((a, b) => a.value - b.value),
+    propertyTypes: Object.entries(propertyTypeCounts)
+      .map(([type, count]) => ({
+        value: type,
+        count
+      }))
   }
 }

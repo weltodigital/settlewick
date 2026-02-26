@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client'
+// Re-export Supabase clients for backward compatibility
+export { createClient } from './supabase/client'
+export { createClient as createServerClient } from './supabase/server'
+export { supabaseAdmin } from './supabase/admin'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Default client export (browser client)
+import { createClient } from './supabase/client'
+export const supabase = createClient()
