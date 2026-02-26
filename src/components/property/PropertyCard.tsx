@@ -24,7 +24,7 @@ export default function PropertyCard({
   isViewed = false,
   viewMode = 'grid'
 }: PropertyCardProps) {
-  const primaryImage = property.images.find(img => img.isPrimary) || property.images[0]
+  const primaryImage = property.images.find((img: any) => img.isPrimary) || property.images[0]
   const hasReduction = property.originalPrice && property.originalPrice > property.price
   const { toggleComparison, isInComparison } = usePropertyComparison()
 
