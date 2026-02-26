@@ -1,28 +1,67 @@
-import { withAuth } from 'next-auth/middleware'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export default withAuth(
-  function middleware(req) {
-    // Additional middleware logic can go here
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Protect dashboard and profile routes
-        if (req.nextUrl.pathname.startsWith('/dashboard') ||
-            req.nextUrl.pathname.startsWith('/profile')) {
-          return !!token
-        }
-
-        // Protect agent routes - require AGENT role
-        if (req.nextUrl.pathname.startsWith('/agent/dashboard')) {
-          return token?.role === 'AGENT'
-        }
-
-        return true
-      },
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
     },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // Get the user session
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protect dashboard and profile routes - require authentication
+  if (request.nextUrl.pathname.startsWith('/dashboard') ||
+      request.nextUrl.pathname.startsWith('/profile')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    }
   }
-)
+
+  // Protect agent routes - require authentication and agent role
+  if (request.nextUrl.pathname.startsWith('/agent/dashboard')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    }
+
+    // Get user profile to check role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'agent') {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
+  return response
+}
 
 export const config = {
   matcher: [
