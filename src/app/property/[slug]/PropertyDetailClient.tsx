@@ -441,7 +441,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
             <div className="card p-6">
               <h2 className="text-2xl font-bold text-text-primary mb-4">About this property</h2>
               <div className="prose prose-sm max-w-none text-text-secondary">
-                {property.description.split('\n').map((paragraph, index) => (
+                {property.description.split('\n').map((paragraph: string, index) => (
                   <p key={index} className="mb-4 last:mb-0">
                     {paragraph}
                   </p>
