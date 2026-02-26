@@ -32,22 +32,22 @@ export default function SaveSearchButton({ filters, total, onSaved }: SaveSearch
       parts.push(`in ${filters.location}`)
     }
 
-    if (filters.bedrooms?.min && filters.bedrooms?.max) {
-      if (filters.bedrooms.min === filters.bedrooms.max) {
-        parts.push(`${filters.bedrooms.min} bed`)
+    if ((filters.bedrooms as any)?.min && (filters.bedrooms as any)?.max) {
+      if ((filters.bedrooms as any).min === (filters.bedrooms as any).max) {
+        parts.push(`${(filters.bedrooms as any).min} bed`)
       } else {
-        parts.push(`${filters.bedrooms.min}-${filters.bedrooms.max} bed`)
+        parts.push(`${(filters.bedrooms as any).min}-${(filters.bedrooms as any).max} bed`)
       }
-    } else if (filters.bedrooms?.min) {
-      parts.push(`${filters.bedrooms.min}+ bed`)
+    } else if ((filters.bedrooms as any)?.min) {
+      parts.push(`${(filters.bedrooms as any).min}+ bed`)
     }
 
-    if (filters.price?.min && filters.price?.max) {
-      parts.push(`£${filters.price.min.toLocaleString()}-£${filters.price.max.toLocaleString()}`)
-    } else if (filters.price?.max) {
-      parts.push(`up to £${filters.price.max.toLocaleString()}`)
-    } else if (filters.price?.min) {
-      parts.push(`from £${filters.price.min.toLocaleString()}`)
+    if (filters.priceMin && filters.priceMax) {
+      parts.push(`£${filters.priceMin.toLocaleString()}-£${filters.priceMax.toLocaleString()}`)
+    } else if (filters.priceMax) {
+      parts.push(`up to £${filters.priceMax.toLocaleString()}`)
+    } else if (filters.priceMin) {
+      parts.push(`from £${filters.priceMin.toLocaleString()}`)
     }
 
     return parts.length > 0 ? parts.join(' ') : 'Property Search'

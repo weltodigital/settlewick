@@ -53,8 +53,8 @@ export async function searchProperties(
   }
 
   // Bathrooms
-  if (bathrooms && bathrooms.length > 0) {
-    whereClause.bathrooms = { in: bathrooms }
+  if (bathrooms && (bathrooms as any).length > 0) {
+    whereClause.bathrooms = { in: bathrooms as any }
   }
 
   // Property types

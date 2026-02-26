@@ -334,7 +334,7 @@ export default function AISmartSearch({ onSearchExecute, currentFilters, placeho
           title: mapping.title,
           description: mapping.description,
           confidence: intent.confidence,
-          filters: mapping.filters,
+          filters: mapping.filters as any,
           icon: <Target className="w-4 h-4 text-accent" />
         })
       }

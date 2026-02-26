@@ -54,7 +54,7 @@ export default function SearchResultsWithMap({
   ]
 
   const handleSortChange = (newSortBy: string) => {
-    setSortBy(newSortBy)
+    setSortBy(newSortBy as any)
     onFiltersChange({
       ...filters,
       sortBy: newSortBy as any
@@ -180,9 +180,9 @@ export default function SearchResultsWithMap({
     }
 
     // Add bathrooms filter
-    if (filters.bathrooms?.min || filters.bathrooms?.max) {
-      const min = filters.bathrooms.min ? `${filters.bathrooms.min}+` : ''
-      const max = filters.bathrooms.max ? `${filters.bathrooms.max}` : ''
+    if ((filters.bathrooms as any)?.min || (filters.bathrooms as any)?.max) {
+      const min = (filters.bathrooms as any).min ? `${(filters.bathrooms as any).min}+` : ''
+      const max = (filters.bathrooms as any).max ? `${(filters.bathrooms as any).max}` : ''
       activeFilters.push({
         key: 'bathrooms',
         value: filters.bathrooms,
@@ -620,7 +620,7 @@ export default function SearchResultsWithMap({
       />
 
       {/* Property Comparison Bar */}
-      <ComparisonBar properties={properties} />
+      <ComparisonBar isVisible={false} onClose={() => {}} />
     </div>
   )
 }

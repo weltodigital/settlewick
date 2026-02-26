@@ -34,7 +34,7 @@ export default function SearchResults({
   ]
 
   const handleSortChange = (newSortBy: string) => {
-    setSortBy(newSortBy)
+    setSortBy(newSortBy as any)
     onFiltersChange({
       ...filters,
       sortBy: newSortBy as any
@@ -259,7 +259,7 @@ export default function SearchResults({
                   <PropertyCard
                     key={property.id}
                     property={property}
-                    onSave={() => {
+                    onToggleSave={() => {
                       // TODO: Implement save functionality
                       console.log('Save property:', property.id)
                     }}
@@ -278,7 +278,7 @@ export default function SearchResults({
                   <div key={property.id} className="md:grid md:grid-cols-1">
                     <PropertyCard
                       property={property}
-                      onSave={() => console.log('Save property:', property.id)}
+                      onToggleSave={() => console.log('Save property:', property.id)}
                       onHide={() => console.log('Hide property:', property.id)}
                     />
                   </div>

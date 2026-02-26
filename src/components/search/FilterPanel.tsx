@@ -216,14 +216,14 @@ export default function FilterPanel({
                       <button
                         key={option.value}
                         onClick={() => {
-                          const current = filters.bathrooms || []
+                          const current = (filters.bathrooms as number[]) || []
                           const updated = current.includes(option.value)
                             ? current.filter(v => v !== option.value)
                             : [...current, option.value]
                           updateFilter('bathrooms', updated.length > 0 ? updated : undefined)
                         }}
                         className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
-                          filters.bathrooms?.includes(option.value)
+                          (filters.bathrooms as number[])?.includes(option.value)
                             ? 'bg-accent text-white border-accent'
                             : 'bg-surface border-border hover:border-accent'
                         }`}

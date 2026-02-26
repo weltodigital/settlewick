@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, ListingType, PropertyStatus, PropertyType, PriceQualifier, Tenure, FloorLevel } from '@prisma/client'
 import { createSpatialIndexes } from '../src/lib/geo'
 
 const prisma = new PrismaClient()
@@ -188,7 +188,7 @@ async function main() {
 
   for (let i = 0; i < salePropertyCount + rentalPropertyCount; i++) {
     const isRental = i >= salePropertyCount
-    const listingType = isRental ? 'RENT' : 'SALE'
+    const listingType = isRental ? ListingType.RENT : ListingType.SALE
 
     // Random area
     const postcodeKey = getRandomItem(Object.keys(PORTSMOUTH_AREAS))
@@ -204,7 +204,7 @@ async function main() {
     const longitude = areaData.lng + (Math.random() - 0.5) * 0.02
 
     // Property characteristics
-    const propertyTypes = ['DETACHED', 'SEMI_DETACHED', 'TERRACED', 'FLAT', 'BUNGALOW', 'MAISONETTE']
+    const propertyTypes = [PropertyType.DETACHED, PropertyType.SEMI_DETACHED, PropertyType.TERRACED, PropertyType.FLAT, PropertyType.BUNGALOW, PropertyType.MAISONETTE]
     const propertyType = getRandomItem(propertyTypes)
 
     const bedrooms = getRandomNumber(1, 5)
@@ -234,9 +234,9 @@ async function main() {
     listedDate.setDate(listedDate.getDate() - getRandomNumber(1, 180))
 
     // Property status
-    let status = 'AVAILABLE'
+    let status: PropertyStatus = PropertyStatus.AVAILABLE
     if (!isRental && getRandomBoolean(0.15)) {
-      status = getRandomItem(['UNDER_OFFER', 'SSTC'])
+      status = getRandomItem([PropertyStatus.UNDER_OFFER, PropertyStatus.SSTC])
     }
 
     // Price reduction logic
@@ -255,10 +255,10 @@ async function main() {
     const propertyData = {
       slug: generateSlug(addressLine1, propertyType, bedrooms),
       listingType,
-      status: status as any,
+      status,
       price: currentPrice,
-      priceQualifier: isRental ? null : getRandomItem(['GUIDE_PRICE', 'OFFERS_OVER', 'FIXED_PRICE', null]),
-      propertyType: propertyType as any,
+      priceQualifier: isRental ? null : getRandomItem([PriceQualifier.GUIDE_PRICE, PriceQualifier.OFFERS_OVER, PriceQualifier.FIXED_PRICE, null]),
+      propertyType,
       newBuild: getRandomBoolean(0.1),
 
       // Address
@@ -276,18 +276,18 @@ async function main() {
       receptionRooms,
       floorAreaSqft,
       floorAreaSqm: Math.round(floorAreaSqft * 0.092903 * 10) / 10,
-      plotSizeSqft: propertyType === 'DETACHED' ? getRandomNumber(2000, 8000) :
-                   propertyType === 'SEMI_DETACHED' ? getRandomNumber(1000, 4000) :
+      plotSizeSqft: propertyType === PropertyType.DETACHED ? getRandomNumber(2000, 8000) :
+                   propertyType === PropertyType.SEMI_DETACHED ? getRandomNumber(1000, 4000) :
                    getRandomBoolean(0.3) ? getRandomNumber(500, 2000) : null,
-      floorLevel: ['FLAT', 'MAISONETTE'].includes(propertyType) ?
-                  getRandomItem(['GROUND', 'FIRST', 'SECOND', 'TOP']) : null,
+      floorLevel: (propertyType === PropertyType.FLAT || propertyType === PropertyType.MAISONETTE) ?
+                  getRandomItem([FloorLevel.GROUND, FloorLevel.FIRST, FloorLevel.SECOND, FloorLevel.TOP]) : null,
 
       // Tenure
-      tenure: ['FLAT', 'MAISONETTE'].includes(propertyType) ?
-              getRandomItem(['LEASEHOLD', 'SHARE_OF_FREEHOLD']) : 'FREEHOLD',
-      leaseLengthRemaining: ['FLAT', 'MAISONETTE'].includes(propertyType) ? getRandomNumber(85, 999) : null,
-      serviceChargeAnnual: ['FLAT', 'MAISONETTE'].includes(propertyType) ? getRandomNumber(80000, 300000) : null,
-      groundRentAnnual: ['FLAT', 'MAISONETTE'].includes(propertyType) && getRandomBoolean(0.7) ? getRandomNumber(10000, 50000) : null,
+      tenure: (propertyType === PropertyType.FLAT || propertyType === PropertyType.MAISONETTE) ?
+              getRandomItem([Tenure.LEASEHOLD, Tenure.SHARE_OF_FREEHOLD]) : Tenure.FREEHOLD,
+      leaseLengthRemaining: (propertyType === PropertyType.FLAT || propertyType === PropertyType.MAISONETTE) ? getRandomNumber(85, 999) : null,
+      serviceChargeAnnual: (propertyType === PropertyType.FLAT || propertyType === PropertyType.MAISONETTE) ? getRandomNumber(80000, 300000) : null,
+      groundRentAnnual: (propertyType === PropertyType.FLAT || propertyType === PropertyType.MAISONETTE) && getRandomBoolean(0.7) ? getRandomNumber(10000, 50000) : null,
 
       // Energy
       epcRating: getRandomItem(['A', 'B', 'C', 'D', 'E', 'F']),
@@ -298,7 +298,7 @@ async function main() {
       estimatedAnnualEnergyCost: getRandomNumber(80000, 250000),
 
       // Outdoor & parking
-      gardenType: propertyType !== 'FLAT' ? getRandomItem(['PRIVATE', 'COMMUNAL', 'NONE']) :
+      gardenType: propertyType !== PropertyType.FLAT ? getRandomItem(['PRIVATE', 'COMMUNAL', 'NONE']) :
                   getRandomBoolean(0.3) ? 'COMMUNAL' : 'NONE',
       gardenOrientation: getRandomBoolean(0.7) ? getRandomItem(['NORTH', 'SOUTH', 'EAST', 'WEST']) : null,
       parkingType: getRandomItem(['DRIVEWAY', 'GARAGE', 'ON_STREET', 'NONE']),
@@ -307,7 +307,7 @@ async function main() {
       // Features
       periodProperty: getRandomBoolean(0.4),
       modern: getRandomBoolean(0.3),
-      cottage: propertyType === 'DETACHED' && getRandomBoolean(0.2),
+      cottage: propertyType === PropertyType.DETACHED && getRandomBoolean(0.2),
       fixerUpper: getRandomBoolean(0.1),
       utilityRoom: bedrooms >= 3 && getRandomBoolean(0.6),
       basement: getRandomBoolean(0.1),
@@ -318,7 +318,7 @@ async function main() {
       patio: getRandomBoolean(0.5),
       kitchenIsland: bedrooms >= 3 && getRandomBoolean(0.4),
       loftConversion: getRandomBoolean(0.2),
-      annexe: propertyType === 'DETACHED' && getRandomBoolean(0.05),
+      annexe: propertyType === PropertyType.DETACHED && getRandomBoolean(0.05),
       openPlanKitchen: getRandomBoolean(0.4),
       separateDiningRoom: bedrooms >= 3 && getRandomBoolean(0.6),
       downstairsWc: bedrooms >= 2 && getRandomBoolean(0.7),
@@ -333,7 +333,7 @@ async function main() {
       originalFeatures: getRandomBoolean(0.3),
       cellar: getRandomBoolean(0.1),
       garage: getRandomBoolean(0.3),
-      outbuildings: propertyType !== 'FLAT' && getRandomBoolean(0.2),
+      outbuildings: propertyType !== PropertyType.FLAT && getRandomBoolean(0.2),
       swimmingPool: getRandomBoolean(0.02),
       balcony: ['FLAT', 'MAISONETTE'].includes(propertyType) && getRandomBoolean(0.4),
       roofTerrace: ['FLAT', 'MAISONETTE'].includes(propertyType) && getRandomBoolean(0.1),
@@ -363,7 +363,7 @@ async function main() {
       createdBy: adminUser.id
     }
 
-    const property = await prisma.property.create({ data: propertyData })
+    const property = await prisma.property.create({ data: propertyData as any })
     properties.push(property)
 
     // Add images
@@ -428,7 +428,7 @@ async function main() {
     const soldDate = new Date()
     soldDate.setDate(soldDate.getDate() - getRandomNumber(1, 730)) // Last 2 years
 
-    const propertyType = getRandomItem(['DETACHED', 'SEMI_DETACHED', 'TERRACED', 'FLAT'])
+    const propertyType = getRandomItem([PropertyType.DETACHED, PropertyType.SEMI_DETACHED, PropertyType.TERRACED, PropertyType.FLAT])
     const bedrooms = getRandomNumber(1, 5)
 
     const multipliers = {
@@ -443,9 +443,9 @@ async function main() {
         postcode: `${postcodeKey} ${getRandomNumber(1, 9)}${String.fromCharCode(65 + getRandomNumber(0, 25))}${String.fromCharCode(65 + getRandomNumber(0, 25))}`,
         price,
         dateSold: soldDate,
-        propertyType: propertyType as any,
+        propertyType,
         newBuild: getRandomBoolean(0.1),
-        tenure: propertyType === 'FLAT' ? getRandomItem(['LEASEHOLD', 'FREEHOLD']) : 'FREEHOLD',
+        tenure: propertyType === PropertyType.FLAT ? getRandomItem([Tenure.LEASEHOLD, Tenure.FREEHOLD]) : Tenure.FREEHOLD,
         latitude: areaData.lat + (Math.random() - 0.5) * 0.02,
         longitude: areaData.lng + (Math.random() - 0.5) * 0.02
       }

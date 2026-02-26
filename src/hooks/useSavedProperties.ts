@@ -50,7 +50,7 @@ export function useSavedProperties() {
       })
 
       if (response.ok) {
-        setSavedPropertyIds(prev => new Set([...prev, propertyId]))
+        setSavedPropertyIds(prev => new Set([...Array.from(prev), propertyId]))
         await fetchSavedProperties() // Refresh the list
         return true
       }

@@ -16,7 +16,10 @@ export interface PropertyFilters {
   priceMin?: number
   priceMax?: number
   bedrooms?: number[]
-  bathrooms?: number[]
+  bathrooms?: {
+    min?: number
+    max?: number
+  } | number[]
   propertyType?: PropertyType[]
   propertyTypes?: string[] // For advanced filters
 
@@ -27,15 +30,12 @@ export interface PropertyFilters {
     min?: number
     max?: number
   }
-  bathrooms?: {
-    min?: number
-    max?: number
-  } | number[]
   receptionRoomsMin?: number
   plotSizeMin?: number // sqft
   floorLevel?: string[]
 
   // Property Features (boolean flags)
+  newBuild?: boolean
   periodProperty?: boolean
   modern?: boolean
   cottage?: boolean
@@ -84,6 +84,8 @@ export interface PropertyFilters {
   energyCostMax?: number // pence annually
 
   // Outdoor & Parking
+  garden?: boolean
+  parking?: boolean
   gardenType?: GardenType[]
   gardenOrientation?: Orientation[]
   parkingType?: ParkingType[]

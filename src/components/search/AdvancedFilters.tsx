@@ -28,7 +28,8 @@ export default function AdvancedFilters({ filters, onFiltersChange, isOpen, onTo
     const resetFilters: PropertyFilters = {
       location: filters.location,
       listingType: filters.listingType,
-      price: filters.price,
+      priceMin: filters.priceMin,
+      priceMax: filters.priceMax,
       bedrooms: filters.bedrooms
     }
     setLocalFilters(resetFilters)
@@ -155,7 +156,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, isOpen, onTo
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Minimum</label>
                 <select
-                  value={localFilters.bathrooms?.min || ''}
+                  value={(localFilters.bathrooms as any)?.min || ''}
                   onChange={(e) => {
                     const min = e.target.value ? parseInt(e.target.value) : undefined
                     handleFilterChange('bathrooms', {
@@ -174,7 +175,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, isOpen, onTo
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Maximum</label>
                 <select
-                  value={localFilters.bathrooms?.max || ''}
+                  value={(localFilters.bathrooms as any)?.max || ''}
                   onChange={(e) => {
                     const max = e.target.value ? parseInt(e.target.value) : undefined
                     handleFilterChange('bathrooms', {
@@ -201,7 +202,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, isOpen, onTo
                 <label key={tenure.value} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={localFilters.tenure?.includes(tenure.value) || false}
+                    checked={localFilters.tenure?.includes(tenure.value as any) || false}
                     onChange={(e) => {
                       const current = localFilters.tenure || []
                       const updated = e.target.checked
@@ -251,7 +252,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, isOpen, onTo
                 <label key={parking.value} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={localFilters.parkingType?.includes(parking.value) || false}
+                    checked={localFilters.parkingType?.includes(parking.value as any) || false}
                     onChange={(e) => {
                       const current = localFilters.parkingType || []
                       const updated = e.target.checked
@@ -275,7 +276,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, isOpen, onTo
                 <label key={garden.value} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={localFilters.gardenType?.includes(garden.value) || false}
+                    checked={localFilters.gardenType?.includes(garden.value as any) || false}
                     onChange={(e) => {
                       const current = localFilters.gardenType || []
                       const updated = e.target.checked

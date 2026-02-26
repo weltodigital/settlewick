@@ -36,15 +36,14 @@ export async function POST(request: NextRequest) {
 
     const {
       name,
-      searchCriteria,
-      searchUrl,
+      searchParams,
       alertEnabled = false,
       alertFrequency = 'DAILY'
     } = await request.json()
 
-    if (!name || !searchCriteria) {
+    if (!name || !searchParams) {
       return NextResponse.json(
-        { message: 'Name and search criteria are required' },
+        { message: 'Name and search parameters are required' },
         { status: 400 }
       )
     }
@@ -53,8 +52,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         name,
-        searchCriteria,
-        searchUrl,
+        searchParams,
         alertEnabled,
         alertFrequency
       }

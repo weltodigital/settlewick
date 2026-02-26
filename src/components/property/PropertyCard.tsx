@@ -68,7 +68,10 @@ export default function PropertyCard({
 
         {/* Actions - Enhanced touch targets for mobile */}
         <div className="absolute top-3 right-3 flex gap-2">
-          <ShareButton property={property} />
+          <ShareButton
+            url={`https://settlewick.com/property/${property.slug}`}
+            title={`${property.addressLine1} - ${formatPrice(property.price, property.listingType)}`}
+          />
           <button
             onClick={(e) => {
               e.preventDefault()

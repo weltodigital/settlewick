@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        hashedPassword,
+        password: hashedPassword,
         role: role.toUpperCase(),
       }
     })

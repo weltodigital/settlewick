@@ -5,14 +5,13 @@ import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/db'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
   },
   pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
+    signIn: '/auth/signin'
   },
   providers: [
     CredentialsProvider({
@@ -32,11 +31,11 @@ export const authOptions: NextAuthOptions = {
           }
         })
 
-        if (!user || !user.hashedPassword) {
+        if (!user || !user.password) {
           return null
         }
 
-        const isPasswordValid = await compare(credentials.password, user.hashedPassword)
+        const isPasswordValid = await compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
           return null

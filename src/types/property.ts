@@ -1,5 +1,5 @@
 import type {
-  Property,
+  Property as PrismaProperty,
   PropertyImage,
   PropertyPriceHistory,
   Agent,
@@ -10,7 +10,9 @@ import type {
   Furnished
 } from '@prisma/client'
 
-export type PropertyWithDetails = Property & {
+export type Property = PrismaProperty
+
+export type PropertyWithDetails = PrismaProperty & {
   agent: Agent
   images: PropertyImage[]
   priceHistory: PropertyPriceHistory[]
