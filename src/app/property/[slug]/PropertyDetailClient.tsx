@@ -394,7 +394,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                   )}
                   <div className="flex items-center gap-1">
                     <Home className="w-4 h-4" />
-                    <span>{property.propertyType.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}</span>
+                    <span>{property.propertyType.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())}</span>
                   </div>
                 </div>
               </div>
