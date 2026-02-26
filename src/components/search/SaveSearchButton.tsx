@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Bookmark, Check, X } from 'lucide-react'
 import type { PropertyFilters } from '@/types/filters'
 
@@ -12,14 +12,21 @@ interface SaveSearchButtonProps {
 }
 
 export default function SaveSearchButton({ filters, total, onSaved }: SaveSearchButtonProps) {
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [alertEnabled, setAlertEnabled] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
 
-  if (!session) return null
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+  }, [])
+
+  if (!user) return null
 
   const generateSearchName = () => {
     let parts = []

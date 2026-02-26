@@ -1,14 +1,36 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Menu, X, Search, User, Heart, LogOut, Settings } from 'lucide-react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Get initial session
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setShowUserMenu(false)
+  }
 
   return (
     <header className="bg-primary text-white sticky top-0 z-50">
@@ -40,7 +62,7 @@ export default function Header() {
 
           {/* Desktop Auth & Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {session ? (
+            {user ? (
               <>
                 <Link href="/dashboard" className="hover:text-accent transition-colors">
                   <Heart className="w-5 h-5" />
@@ -51,7 +73,7 @@ export default function Header() {
                     className="flex items-center space-x-2 hover:text-accent transition-colors"
                   >
                     <User className="w-5 h-5" />
-                    <span className="text-sm">{session.user?.name}</span>
+                    <span className="text-sm">{user?.email}</span>
                   </button>
 
                   {showUserMenu && (
@@ -73,10 +95,7 @@ export default function Header() {
                         Profile
                       </Link>
                       <button
-                        onClick={() => {
-                          setShowUserMenu(false)
-                          signOut()
-                        }}
+                        onClick={handleSignOut}
                         className="flex items-center w-full px-4 py-2 hover:bg-secondary transition-colors text-left"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
@@ -130,7 +149,7 @@ export default function Header() {
                 Mortgage
               </Link>
               <hr className="border-primary-light" />
-              {session ? (
+              {user ? (
                 <>
                   <Link href="/dashboard" className="hover:text-accent transition-colors">
                     Dashboard
@@ -139,7 +158,7 @@ export default function Header() {
                     Profile
                   </Link>
                   <button
-                    onClick={() => signOut()}
+                    onClick={handleSignOut}
                     className="text-left hover:text-accent transition-colors"
                   >
                     Sign Out

@@ -104,7 +104,7 @@ export async function searchProperties(
         console.error('Error fetching spatial properties:', propertiesError)
       } else {
         return {
-          properties: properties as PropertyWithDetails[],
+          properties: properties as unknown as PropertyWithDetails[],
           total: spatialResults.length,
           page,
           totalPages: Math.ceil(spatialResults.length / limit),
@@ -152,7 +152,7 @@ export async function searchProperties(
         console.error('Error fetching bounded properties:', propertiesError)
       } else {
         return {
-          properties: properties as PropertyWithDetails[],
+          properties: properties as unknown as PropertyWithDetails[],
           total: spatialResults.length,
           page,
           totalPages: Math.ceil(spatialResults.length / limit),
@@ -171,7 +171,7 @@ export async function searchProperties(
       images:property_images(*),
       priceHistory:property_price_history(*)
     `, { count: 'exact' })
-    .eq('listing_type', listingType)
+    .eq('listing_type', listingType === 'SALE' ? 'sale' : 'rent')
     .eq('status', 'available')
 
   // Price range
@@ -198,7 +198,8 @@ export async function searchProperties(
 
   // Property types
   if (propertyType && propertyType.length > 0) {
-    query = query.in('property_type', propertyType)
+    const convertedTypes = propertyType.map(type => type.toLowerCase())
+    query = query.in('property_type', convertedTypes as any)
   }
 
   // Boolean features
@@ -219,27 +220,31 @@ export async function searchProperties(
 
   // Tenure
   if (tenure && tenure.length > 0) {
-    query = query.in('tenure', tenure)
+    const convertedTenure = tenure.map(t => t.toLowerCase())
+    query = query.in('tenure', convertedTenure as any)
   }
 
   // EPC rating
   if (epcRating && epcRating.length > 0) {
-    query = query.in('epc_rating', epcRating)
+    query = query.in('epc_rating', epcRating as any)
   }
 
   // Garden type
   if (gardenType && gardenType.length > 0) {
-    query = query.in('garden_type', gardenType)
+    const convertedGardenType = gardenType.map(g => g.toLowerCase())
+    query = query.in('garden_type', convertedGardenType as any)
   }
 
   // Parking type
   if (parkingType && parkingType.length > 0) {
-    query = query.in('parking_type', parkingType)
+    const convertedParkingType = parkingType.map(p => p.toLowerCase())
+    query = query.in('parking_type', convertedParkingType as any)
   }
 
   // Rental specific filters
   if (furnished && furnished.length > 0) {
-    query = query.in('furnished', furnished)
+    const convertedFurnished = furnished.map(f => f.toLowerCase())
+    query = query.in('furnished', convertedFurnished as any)
   }
   if (petsAllowed === true) query = query.eq('pets_allowed', true)
   if (billsIncluded === true) query = query.eq('bills_included', true)
@@ -275,7 +280,7 @@ export async function searchProperties(
       query = query.order('price', { ascending: false })
       break
     case 'most_reduced':
-      query = query.order('price_changed_date', { ascending: false, nullsLast: true })
+      query = query.order('price_changed_date', { ascending: false, nullsFirst: false })
         .order('listed_date', { ascending: false })
       break
     default:
@@ -304,7 +309,7 @@ export async function searchProperties(
   const totalPages = Math.ceil(total / limit)
 
   return {
-    properties: properties as PropertyWithDetails[] || [],
+    properties: properties as unknown as PropertyWithDetails[] || [],
     total,
     page,
     totalPages,
@@ -321,7 +326,7 @@ export async function getFilterCounts(baseFilters: PropertyFilters) {
   let baseQuery = supabase
     .from('properties')
     .select('bedrooms, property_type')
-    .eq('listing_type', listingType)
+    .eq('listing_type', listingType === 'SALE' ? 'sale' : 'rent')
     .eq('status', 'available')
 
   if (location) {

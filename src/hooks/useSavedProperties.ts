@@ -1,23 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { createClient } from '@/lib/supabase/client'
 
 interface SavedProperty {
   id: string
-  createdAt: string
+  user_id: string
+  property_id: string
+  created_at: string
   property: any // Use your PropertyWithDetails type
 }
 
 export function useSavedProperties() {
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
   const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([])
   const [savedPropertyIds, setSavedPropertyIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
 
+  // Check user auth
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+  }, [])
+
   // Fetch saved properties
   const fetchSavedProperties = async () => {
-    if (!session?.user?.id) {
+    if (!user) {
       setSavedProperties([])
       setSavedPropertyIds(new Set())
       return
@@ -25,11 +35,24 @@ export function useSavedProperties() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/saved-properties')
-      if (response.ok) {
-        const data = await response.json()
-        setSavedProperties(data)
-        setSavedPropertyIds(new Set(data.map((sp: SavedProperty) => sp.property.id)))
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('saved_properties')
+        .select(`
+          id,
+          user_id,
+          property_id,
+          created_at,
+          property:properties!property_id (*)
+        `)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error fetching saved properties:', error)
+      } else {
+        const savedPropsData = data || []
+        setSavedProperties(savedPropsData)
+        setSavedPropertyIds(new Set(savedPropsData.map(sp => sp.property_id)))
       }
     } catch (error) {
       console.error('Error fetching saved properties:', error)
@@ -40,20 +63,23 @@ export function useSavedProperties() {
 
   // Save a property
   const saveProperty = async (propertyId: string) => {
-    if (!session?.user?.id) return false
+    if (!user) return false
 
     try {
-      const response = await fetch('/api/saved-properties', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ propertyId })
-      })
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('saved_properties')
+        .insert({
+          user_id: user.id,
+          property_id: propertyId
+        })
 
-      if (response.ok) {
+      if (!error) {
         setSavedPropertyIds(prev => new Set([...Array.from(prev), propertyId]))
         await fetchSavedProperties() // Refresh the list
         return true
       }
+      console.error('Error saving property:', error)
     } catch (error) {
       console.error('Error saving property:', error)
     }
@@ -62,24 +88,28 @@ export function useSavedProperties() {
 
   // Remove a property
   const removeProperty = async (propertyId: string) => {
-    if (!session?.user?.id) return false
+    if (!user) return false
 
     try {
-      const response = await fetch(`/api/saved-properties?propertyId=${propertyId}`, {
-        method: 'DELETE'
-      })
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('saved_properties')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('property_id', propertyId)
 
-      if (response.ok) {
+      if (!error) {
         setSavedPropertyIds(prev => {
           const newSet = new Set(prev)
           newSet.delete(propertyId)
           return newSet
         })
         setSavedProperties(prev =>
-          prev.filter(sp => sp.property.id !== propertyId)
+          prev.filter(sp => sp.property?.id !== propertyId)
         )
         return true
       }
+      console.error('Error removing saved property:', error)
     } catch (error) {
       console.error('Error removing saved property:', error)
     }
@@ -95,10 +125,10 @@ export function useSavedProperties() {
   // Check if a property is saved
   const isSaved = (propertyId: string) => savedPropertyIds.has(propertyId)
 
-  // Load saved properties when session changes
+  // Load saved properties when user changes
   useEffect(() => {
     fetchSavedProperties()
-  }, [session?.user?.id])
+  }, [user?.id])
 
   return {
     savedProperties,

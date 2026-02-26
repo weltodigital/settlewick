@@ -1,20 +1,29 @@
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const supabase = createClient()
 
-    if (!session?.user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const savedSearches = await prisma.savedSearch.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { data: savedSearches, error } = await supabase
+      .from('saved_searches')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching saved searches:', error)
+      return NextResponse.json(
+        { message: 'Internal server error' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(savedSearches)
   } catch (error) {
@@ -28,35 +37,46 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const supabase = createClient()
 
-    if (!session?.user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
     const {
       name,
-      searchParams,
-      alertEnabled = false,
-      alertFrequency = 'DAILY'
+      searchCriteria,
+      searchUrl,
+      alertEnabled = false
     } = await request.json()
 
-    if (!name || !searchParams) {
+    if (!name || !searchCriteria) {
       return NextResponse.json(
-        { message: 'Name and search parameters are required' },
+        { message: 'Name and search criteria are required' },
         { status: 400 }
       )
     }
 
-    const savedSearch = await prisma.savedSearch.create({
-      data: {
-        userId: session.user.id,
+    const { data: savedSearch, error } = await supabase
+      .from('saved_searches')
+      .insert({
+        user_id: user.id,
         name,
-        searchParams,
-        alertEnabled,
-        alertFrequency
-      }
-    })
+        search_params: searchCriteria,
+        alert_enabled: alertEnabled
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error saving search:', error)
+      return NextResponse.json(
+        { message: 'Internal server error' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(savedSearch, { status: 201 })
   } catch (error) {
@@ -70,9 +90,11 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const supabase = createClient()
 
-    if (!session?.user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
@@ -86,17 +108,17 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const deletedSearch = await prisma.savedSearch.deleteMany({
-      where: {
-        id: searchId,
-        userId: session.user.id
-      }
-    })
+    const { error } = await supabase
+      .from('saved_searches')
+      .delete()
+      .eq('id', searchId)
+      .eq('user_id', user.id)
 
-    if (deletedSearch.count === 0) {
+    if (error) {
+      console.error('Error deleting saved search:', error)
       return NextResponse.json(
-        { message: 'Saved search not found' },
-        { status: 404 }
+        { message: 'Internal server error' },
+        { status: 500 }
       )
     }
 

@@ -29,7 +29,7 @@ const AGENTS_DATA = [
     latitude: 50.7904,
     longitude: -1.0867,
     description: 'Local property experts serving Portsmouth and surrounding areas for over 20 years.',
-    subscription_tier: 'premium'
+    subscription_tier: 'premium' as const
   },
   {
     name: 'Solent Homes',
@@ -44,7 +44,7 @@ const AGENTS_DATA = [
     latitude: 50.7969,
     longitude: -1.0947,
     description: 'Specializing in period properties and new builds across South Hampshire.',
-    subscription_tier: 'basic'
+    subscription_tier: 'basic' as const
   },
   {
     name: 'Harbour View Estate Agents',
@@ -58,7 +58,7 @@ const AGENTS_DATA = [
     latitude: 50.7837,
     longitude: -1.1064,
     description: 'Boutique agency focusing on unique properties in historic Portsmouth.',
-    subscription_tier: 'premium'
+    subscription_tier: 'premium' as const
   }
 ]
 
@@ -268,7 +268,7 @@ async function seedDatabase() {
     }
 
     // Update test agent user to link to first agent
-    if (agentUser && agents.length > 0) {
+    if (agentUser?.user?.id && agents.length > 0) {
       await supabaseAdmin
         .from('profiles')
         .update({
@@ -338,8 +338,8 @@ async function seedDatabase() {
 
       const propertyData = {
         slug,
-        listing_type: isRental ? 'rent' : 'sale',
-        status: 'available',
+        listing_type: isRental ? 'rent' as const : 'sale' as const,
+        status: 'available' as const,
         price,
         price_qualifier: 'fixed_price',
         property_type: propertyType,
@@ -361,7 +361,7 @@ async function seedDatabase() {
         description: generateDescription(propertyType, bedrooms, area.name, features),
         summary: `${bedrooms} bed ${propertyType.replace('_', ' ')} in ${area.name}`,
         agent_id: agent.id,
-        created_by: agentUser?.user.id || adminUser?.user.id,
+        created_by: agentUser?.user?.id || adminUser?.user?.id,
         ...features,
         // Rental specific
         ...(isRental && {
@@ -373,7 +373,7 @@ async function seedDatabase() {
 
       const { data: property, error } = await supabaseAdmin
         .from('properties')
-        .insert(propertyData)
+        .insert(propertyData as any)
         .select()
         .single()
 
@@ -393,8 +393,8 @@ async function seedDatabase() {
               display_order: j,
               is_primary: j === 0,
               is_floorplan: j === imageCount - 1 && Math.random() < 0.5,
-              room_tag: ['kitchen', 'living_room', 'bedroom_1', 'bedroom_2', 'bathroom', 'exterior'][Math.floor(Math.random() * 6)]
-            })
+              room_tag: (['kitchen', 'living_room', 'bedroom_1', 'bedroom_2', 'bathroom', 'exterior'] as const)[Math.floor(Math.random() * 6)]
+            } as any)
         }
 
         // Create price history entry

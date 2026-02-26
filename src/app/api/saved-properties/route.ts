@@ -1,28 +1,32 @@
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const supabase = createClient()
 
-    if (!session?.user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const savedProperties = await prisma.savedProperty.findMany({
-      where: { userId: session.user.id },
-      include: {
-        property: {
-          include: {
-            images: true,
-            agent: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { data: savedProperties, error } = await supabase
+      .from('saved_properties')
+      .select(`
+        *,
+        properties:property_id (*)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching saved properties:', error)
+      return NextResponse.json(
+        { message: 'Internal server error' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(savedProperties)
   } catch (error) {
@@ -36,9 +40,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const supabase = createClient()
 
-    if (!session?.user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
@@ -52,11 +58,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if property exists
-    const property = await prisma.property.findUnique({
-      where: { id: propertyId }
-    })
+    const { data: property, error: propertyError } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('id', propertyId)
+      .single()
 
-    if (!property) {
+    if (propertyError || !property) {
       return NextResponse.json(
         { message: 'Property not found' },
         { status: 404 }
@@ -64,14 +72,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already saved
-    const existingSave = await prisma.savedProperty.findUnique({
-      where: {
-        userId_propertyId: {
-          userId: session.user.id,
-          propertyId: propertyId
-        }
-      }
-    })
+    const { data: existingSave } = await supabase
+      .from('saved_properties')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('property_id', propertyId)
+      .single()
 
     if (existingSave) {
       return NextResponse.json(
@@ -81,20 +87,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Save the property
-    const savedProperty = await prisma.savedProperty.create({
-      data: {
-        userId: session.user.id,
-        propertyId: propertyId
-      },
-      include: {
-        property: {
-          include: {
-            images: true,
-            agent: true
-          }
-        }
-      }
-    })
+    const { data: savedProperty, error } = await supabase
+      .from('saved_properties')
+      .insert({
+        user_id: user.id,
+        property_id: propertyId
+      })
+      .select(`
+        *,
+        properties:property_id (*)
+      `)
+      .single()
+
+    if (error) {
+      console.error('Error saving property:', error)
+      return NextResponse.json(
+        { message: 'Internal server error' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(savedProperty, { status: 201 })
   } catch (error) {
@@ -108,9 +119,11 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const supabase = createClient()
 
-    if (!session?.user?.id) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
@@ -124,17 +137,17 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const deletedSave = await prisma.savedProperty.deleteMany({
-      where: {
-        userId: session.user.id,
-        propertyId: propertyId
-      }
-    })
+    const { error } = await supabase
+      .from('saved_properties')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('property_id', propertyId)
 
-    if (deletedSave.count === 0) {
+    if (error) {
+      console.error('Error removing saved property:', error)
       return NextResponse.json(
-        { message: 'Saved property not found' },
-        { status: 404 }
+        { message: 'Internal server error' },
+        { status: 500 }
       )
     }
 

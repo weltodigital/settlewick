@@ -1,6 +1,9 @@
-import NextAuth from 'next-auth'
-import { authOptions } from '@/lib/auth'
+// NextAuth route no longer needed - removed for Supabase migration
+// All authentication is now handled by Supabase Auth
+export function GET() {
+  return Response.json({ message: 'Auth route moved to Supabase' }, { status: 404 })
+}
 
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
+export function POST() {
+  return Response.json({ message: 'Auth route moved to Supabase' }, { status: 404 })
+}

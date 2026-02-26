@@ -6,15 +6,17 @@ import { Heart, Bell, Search, Map, User, TrendingUp, Filter, Grid, List } from '
 import Link from 'next/link'
 import { PropertyWithDetails } from '@/types/property'
 import PropertyCard from '@/components/property/PropertyCard'
+import { useSavedProperties } from '@/hooks/useSavedProperties'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [savedProperties, setSavedProperties] = useState<any[]>([])
   const [searches, setSearches] = useState([])
   const [alerts, setAlerts] = useState([])
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  const { savedProperties, removeProperty } = useSavedProperties()
 
   useEffect(() => {
     const checkUser = async () => {
@@ -52,24 +54,7 @@ export default function Dashboard() {
 
   const fetchUserData = async (userId: string, supabase: any) => {
     try {
-      // Fetch saved properties
-      const { data: savedPropsData, error: savedPropsError } = await supabase
-        .from('saved_properties')
-        .select(`
-          *,
-          properties:property_id (
-            *,
-            agent:agents(*),
-            images:property_images(*)
-          )
-        `)
-        .eq('user_id', userId)
-
-      if (savedPropsError) {
-        console.error('Error fetching saved properties:', savedPropsError)
-      } else {
-        setSavedProperties(savedPropsData || [])
-      }
+      // Saved properties are now handled by the useSavedProperties hook
 
       // Fetch saved searches
       const { data: searchData, error: searchError } = await supabase
@@ -118,7 +103,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-text-primary mb-2">
-            Welcome back, {session?.user?.name}
+            Welcome back, {user?.user_metadata?.name || user?.email?.split('@')[0]}
           </h1>
           <p className="text-text-secondary">
             Manage your saved properties, searches, and alerts
@@ -249,7 +234,7 @@ export default function Dashboard() {
                     key={savedProp.property.id}
                     property={savedProp.property}
                     viewMode={viewMode}
-                    onToggleSave={toggleSave}
+                    onToggleSave={removeProperty}
                     isSaved={true}
                   />
                 ))}

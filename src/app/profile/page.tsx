@@ -1,22 +1,63 @@
 'use client'
 
-import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { User, Mail, Phone, MapPin, Bell, Shield, Save } from 'lucide-react'
 
 export default function Profile() {
-  const { data: session, status } = useSession()
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState({
-    name: session?.user?.name || '',
-    email: session?.user?.email || '',
+    name: '',
+    email: '',
     phone: '',
     location: '',
     emailAlerts: true,
     priceAlerts: true,
     marketUpdates: false,
   })
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const supabase = createClient()
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        window.location.href = '/auth/signin'
+        return
+      }
+
+      setUser(user)
+
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        setProfile(profile)
+        setFormData({
+          name: profile.name || '',
+          email: user.email || '',
+          phone: '',
+          location: '',
+          emailAlerts: true,
+          priceAlerts: true,
+          marketUpdates: false,
+        })
+      }
+
+      setLoading(false)
+    }
+
+    loadProfile()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -39,7 +80,7 @@ export default function Profile() {
     }
   }
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -50,7 +91,7 @@ export default function Profile() {
     )
   }
 
-  if (status === 'unauthenticated') {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
@@ -296,7 +337,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              {session?.user?.role === 'USER' && (
+              {profile?.role === 'user' && (
                 <button className="btn-outline w-full text-sm">
                   Upgrade to Agent
                 </button>
