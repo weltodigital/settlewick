@@ -139,7 +139,7 @@ export default function PropertyMap({
         {/* Property markers */}
         {properties.map((property) => {
           const isSelected = selectedProperty === property.id
-          const primaryImage = property.images?.find?.(img => img.isPrimary) || property.images?.[0]
+          const primaryImage = property.images?.find?.((img: any) => img.isPrimary) || property.images?.[0]
 
           return (
             <Marker
