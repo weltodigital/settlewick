@@ -77,7 +77,7 @@ export default function SearchResults({
         value: filters.propertyType,
         label: 'Property Type',
         displayValue: filters.propertyType.map(t =>
-          t.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())
+          t.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())
         ).join(', ')
       })
     }

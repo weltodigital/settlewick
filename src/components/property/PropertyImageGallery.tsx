@@ -177,7 +177,7 @@ export default function PropertyImageGallery({
           {/* Room tag */}
           {currentImage?.roomTag && (
             <div className="absolute bottom-4 left-4 bg-accent text-white px-3 py-1 rounded-lg text-sm font-medium">
-              {currentImage.roomTag.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}
+              {currentImage.roomTag.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())}
             </div>
           )}
         </div>

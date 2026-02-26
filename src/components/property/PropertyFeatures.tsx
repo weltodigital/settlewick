@@ -101,13 +101,13 @@ export default function PropertyFeatures({ property }: PropertyFeaturesProps) {
         { label: 'Reception Rooms', value: property.receptionRooms },
         { label: 'Floor Area', value: property.floorAreaSqft ? `${property.floorAreaSqft.toLocaleString()} sq ft` : null },
         { label: 'Plot Size', value: property.plotSizeSqft ? `${property.plotSizeSqft.toLocaleString()} sq ft` : null },
-        { label: 'Floor Level', value: property.floorLevel?.toLowerCase().replace(/^\w/, c => c.toUpperCase()) }
+        { label: 'Floor Level', value: property.floorLevel?.toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) }
       ].filter(item => item.value)
     },
     {
       title: 'Tenure & Costs',
       items: [
-        { label: 'Tenure', value: property.tenure?.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase()) },
+        { label: 'Tenure', value: property.tenure?.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) },
         { label: 'Lease Length', value: property.leaseLengthRemaining ? `${property.leaseLengthRemaining} years remaining` : null },
         { label: 'Service Charge', value: property.serviceChargeAnnual ? `£${(property.serviceChargeAnnual / 100).toLocaleString()}/year` : null },
         { label: 'Ground Rent', value: property.groundRentAnnual ? `£${(property.groundRentAnnual / 100).toLocaleString()}/year` : null }
@@ -118,7 +118,7 @@ export default function PropertyFeatures({ property }: PropertyFeaturesProps) {
       items: [
         { label: 'EPC Rating', value: property.epcRating },
         { label: 'EPC Potential', value: property.epcPotentialRating },
-        { label: 'Heating', value: property.heatingType?.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase()) },
+        { label: 'Heating', value: property.heatingType?.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) },
         { label: 'Mains Gas', value: property.mainsGas ? 'Yes' : property.mainsGas === false ? 'No' : null },
         { label: 'Mains Sewer', value: property.mainsSewer ? 'Yes' : property.mainsSewer === false ? 'No' : null },
         { label: 'Annual Energy Cost', value: property.estimatedAnnualEnergyCost ? `£${(property.estimatedAnnualEnergyCost / 100).toLocaleString()}` : null }
@@ -127,9 +127,9 @@ export default function PropertyFeatures({ property }: PropertyFeaturesProps) {
     {
       title: 'Outdoor & Parking',
       items: [
-        { label: 'Garden', value: property.gardenType?.toLowerCase().replace(/^\w/, c => c.toUpperCase()) },
+        { label: 'Garden', value: property.gardenType?.toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) },
         { label: 'Garden Orientation', value: property.gardenOrientation },
-        { label: 'Parking', value: property.parkingType?.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase()) }
+        { label: 'Parking', value: property.parkingType?.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) }
       ].filter(item => item.value)
     }
   ]
@@ -139,7 +139,7 @@ export default function PropertyFeatures({ property }: PropertyFeaturesProps) {
     propertyDetails.push({
       title: 'Rental Information',
       items: [
-        { label: 'Furnished', value: property.furnished?.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase()) },
+        { label: 'Furnished', value: property.furnished?.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) },
         { label: 'Pets Allowed', value: property.petsAllowed ? 'Yes' : property.petsAllowed === false ? 'No' : null },
         { label: 'Bills Included', value: property.billsIncluded ? 'Yes' : property.billsIncluded === false ? 'No' : null },
         { label: 'Deposit', value: property.depositAmount ? `£${(property.depositAmount / 100).toLocaleString()}` : null },

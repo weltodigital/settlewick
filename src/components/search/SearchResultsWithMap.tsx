@@ -141,7 +141,7 @@ export default function SearchResultsWithMap({
         value: filters.propertyType,
         label: 'Property Type',
         displayValue: filters.propertyType.map(t =>
-          t.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())
+          t.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())
         ).join(', ')
       })
     }
@@ -162,7 +162,7 @@ export default function SearchResultsWithMap({
         value: filters.propertyTypes,
         label: 'Property Types',
         displayValue: filters.propertyTypes.map(t =>
-          t.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())
+          t.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())
         ).join(', ')
       })
     }
@@ -218,7 +218,7 @@ export default function SearchResultsWithMap({
         value: filters.parkingType,
         label: 'Parking',
         displayValue: filters.parkingType.map(p =>
-          p.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())
+          p.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())
         ).join(', ')
       })
     }
@@ -230,7 +230,7 @@ export default function SearchResultsWithMap({
         value: filters.gardenType,
         label: 'Garden',
         displayValue: filters.gardenType.map(g =>
-          g.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())
+          g.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())
         ).join(', ')
       })
     }

@@ -283,7 +283,7 @@ export default function FilterPanel({
                             className="w-4 h-4 text-accent border-border rounded focus:ring-accent"
                           />
                           <span className="text-sm text-text-primary">
-                            {feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            {feature.replace(/([A-Z])/g, ' $1').replace(/^./, (str: string) => str.toUpperCase())}
                           </span>
                         </label>
                       ))}
@@ -362,7 +362,7 @@ export default function FilterPanel({
                             className="w-4 h-4 text-accent border-border rounded focus:ring-accent"
                           />
                           <span className="text-sm text-text-primary">
-                            {option.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}
+                            {option.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())}
                           </span>
                         </label>
                       ))}

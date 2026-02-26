@@ -38,7 +38,7 @@ export default function SearchResultsClient({
 
   // Parse location from URL
   const locationFormatted = location
-    ? location.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    ? location.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
     : ''
 
   // Parse filters from URL search params
