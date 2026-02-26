@@ -68,7 +68,7 @@ export default function PropertySchema({ property }: PropertySchemaProps) {
         "url": property.agent.websiteUrl
       }
     },
-    "image": property.images.filter(img => !img.isFloorplan).map(img => ({
+    "image": property.images.filter((img: any) => !img.isFloorplan).map((img: any) => ({
       "@type": "ImageObject",
       "url": img.imageUrl,
       "caption": img.caption,
