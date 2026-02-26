@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, User, Building2 } from 'lucide-react'
 
@@ -45,36 +45,32 @@ export default function SignUp() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
-        }),
+      const supabase = createClient()
+
+      // Sign up with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            role: 'user'
+          }
+        }
       })
 
-      const data = await response.json()
+      if (authError) {
+        setError(authError.message)
+        return
+      }
 
-      if (response.ok) {
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        })
-
-        if (result?.error) {
-          setError('Account created but sign-in failed. Please try signing in manually.')
+      if (authData.user) {
+        // If email confirmation is required, show message
+        if (!authData.session) {
+          setError('Please check your email to confirm your account before signing in.')
         } else {
           router.push('/dashboard')
-          router.refresh()
         }
-      } else {
-        setError(data.message || 'Failed to create account')
       }
     } catch (error) {
       setError('Something went wrong. Please try again.')

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 
@@ -20,19 +20,33 @@ export default function SignIn() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
+      const supabase = createClient()
+
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        redirect: false,
+        password
       })
 
-      if (result?.error) {
+      if (authError) {
         setError('Invalid email or password')
-      } else {
-        const session = await getSession()
-        if (session) {
+        return
+      }
+
+      if (authData.user) {
+        // Get user profile to determine redirect
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, agent_id')
+          .eq('id', authData.user.id)
+          .single()
+
+        // Redirect based on user role
+        if (profile?.role === 'agent') {
+          router.push('/agent/dashboard')
+        } else if (profile?.role === 'admin') {
+          router.push('/admin')
+        } else {
           router.push('/dashboard')
-          router.refresh()
         }
       }
     } catch (error) {

@@ -1,47 +1,93 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { createClient } from '@/lib/supabase/client'
 import { Heart, Bell, Search, Map, User, TrendingUp, Filter, Grid, List } from 'lucide-react'
 import Link from 'next/link'
 import { PropertyWithDetails } from '@/types/property'
 import PropertyCard from '@/components/property/PropertyCard'
-import { useSavedProperties } from '@/hooks/useSavedProperties'
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
-  const { savedProperties, toggleSave, isSaved, isLoading } = useSavedProperties()
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [savedProperties, setSavedProperties] = useState<any[]>([])
   const [searches, setSearches] = useState([])
   const [alerts, setAlerts] = useState([])
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchUserData()
-    }
-  }, [status])
+    const checkUser = async () => {
+      const supabase = createClient()
 
-  const fetchUserData = async () => {
-    try {
-      // Fetch saved searches
-      const searchResponse = await fetch('/api/saved-searches')
-      if (searchResponse.ok) {
-        const searchData = await searchResponse.json()
-        setSearches(searchData)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        window.location.href = '/auth/signin'
+        return
       }
 
-      // Fetch alerts
-      const alertResponse = await fetch('/api/alerts')
-      if (alertResponse.ok) {
-        const alertData = await alertResponse.json()
-        setAlerts(alertData)
+      setUser(user)
+
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Profile error:', profileError)
+      }
+
+      setProfile(profile)
+      setLoading(false)
+
+      // Fetch user data
+      await fetchUserData(user.id, supabase)
+    }
+
+    checkUser()
+  }, [])
+
+  const fetchUserData = async (userId: string, supabase: any) => {
+    try {
+      // Fetch saved properties
+      const { data: savedPropsData, error: savedPropsError } = await supabase
+        .from('saved_properties')
+        .select(`
+          *,
+          properties:property_id (
+            *,
+            agent:agents(*),
+            images:property_images(*)
+          )
+        `)
+        .eq('user_id', userId)
+
+      if (savedPropsError) {
+        console.error('Error fetching saved properties:', savedPropsError)
+      } else {
+        setSavedProperties(savedPropsData || [])
+      }
+
+      // Fetch saved searches
+      const { data: searchData, error: searchError } = await supabase
+        .from('saved_searches')
+        .select('*')
+        .eq('user_id', userId)
+
+      if (searchError) {
+        console.error('Error fetching saved searches:', searchError)
+      } else {
+        setSearches(searchData || [])
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
     }
   }
 
-  if (status === 'loading' || isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -52,12 +98,12 @@ export default function Dashboard() {
     )
   }
 
-  if (status === 'unauthenticated') {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <h1 className="text-2xl font-bold text-text-primary mb-4">Access Denied</h1>
-          <p className="text-text-secondary mb-6">Please sign in to access your dashboard.</p>
+          <h1 className="text-2xl font-bold text-text-primary mb-4">Please Sign In</h1>
+          <p className="text-text-secondary mb-6">Access your saved properties and searches by signing into your account.</p>
           <Link href="/auth/signin" className="btn-accent">
             Sign In
           </Link>

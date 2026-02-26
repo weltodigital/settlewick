@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, User, Building2, Phone, MapPin } from 'lucide-react'
 
@@ -52,43 +52,68 @@ export default function AgentSignUpClient() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: 'AGENT',
-          metadata: {
-            companyName: formData.companyName,
-            phone: formData.phone,
-            location: formData.location,
-            licenseNumber: formData.licenseNumber,
-            plan: formData.plan
+      const supabase = createClient()
+
+      // Sign up with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            role: 'agent'
           }
-        }),
+        }
       })
 
-      const data = await response.json()
+      if (authError) {
+        setError(authError.message)
+        return
+      }
 
-      if (response.ok) {
-        const result = await signIn('credentials', {
+      if (authData.user) {
+        // Create agent profile
+        const agentData = {
+          name: formData.companyName,
+          slug: formData.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
           email: formData.email,
-          password: formData.password,
-          redirect: false,
-        })
+          phone: formData.phone,
+          address_line_1: formData.location,
+          address_town: 'Portsmouth',
+          address_postcode: '',
+          subscription_tier: (formData.plan === 'starter' ? 'free' : formData.plan) as 'free' | 'basic' | 'premium'
+        }
 
-        if (result?.error) {
-          setError('Account created but sign-in failed. Please try signing in manually.')
+        const { data: agent, error: agentError } = await supabase
+          .from('agents')
+          .insert(agentData)
+          .select()
+          .single()
+
+        if (agentError) {
+          console.error('Error creating agent:', agentError)
+        }
+
+        // Update profile with agent role and link to agent
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            name: formData.name,
+            role: 'agent',
+            agent_id: agent?.id
+          })
+          .eq('id', authData.user.id)
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError)
+        }
+
+        // If email confirmation is required, show message
+        if (!authData.session) {
+          setError('Please check your email to confirm your account before signing in.')
         } else {
           router.push('/agent/dashboard')
-          router.refresh()
         }
-      } else {
-        setError(data.message || 'Failed to create account')
       }
     } catch (error) {
       setError('Something went wrong. Please try again.')

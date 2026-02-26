@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
   Home, Users, TrendingUp, Calendar, Plus, Eye, Heart,
@@ -10,8 +10,10 @@ import {
 } from 'lucide-react'
 
 export default function AgentDashboard() {
-  const { data: session, status } = useSession()
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     activeListings: 12,
     totalViews: 2847,
@@ -22,12 +24,38 @@ export default function AgentDashboard() {
   const [properties, setProperties] = useState([])
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role !== 'AGENT') {
-      router.push('/agent')
-    }
-  }, [status, session, router])
+    const checkUser = async () => {
+      const supabase = createClient()
 
-  if (status === 'loading') {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        router.push('/auth/signin')
+        return
+      }
+
+      setUser(user)
+
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profile || profile.role !== 'agent') {
+        router.push('/agent')
+        return
+      }
+
+      setProfile(profile)
+      setLoading(false)
+    }
+
+    checkUser()
+  }, [router])
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -38,7 +66,7 @@ export default function AgentDashboard() {
     )
   }
 
-  if (status === 'unauthenticated') {
+  if (!user || !profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
@@ -46,20 +74,6 @@ export default function AgentDashboard() {
           <p className="text-text-secondary mb-6">Please sign in with an agent account to access this dashboard.</p>
           <Link href="/auth/signin" className="btn-accent">
             Sign In
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (session?.user?.role !== 'AGENT') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <h1 className="text-2xl font-bold text-text-primary mb-4">Agent Access Required</h1>
-          <p className="text-text-secondary mb-6">This dashboard is only available to registered estate agents.</p>
-          <Link href="/agent" className="btn-accent">
-            Learn More About Agent Features
           </Link>
         </div>
       </div>
@@ -76,7 +90,7 @@ export default function AgentDashboard() {
               Agent Dashboard
             </h1>
             <p className="text-text-secondary">
-              Welcome back, {session.user?.name}
+              Welcome back, {profile?.name || user?.email}
             </p>
           </div>
           <Link href="/agent/properties/new" className="btn-accent flex items-center space-x-2">
