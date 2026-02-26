@@ -95,7 +95,7 @@ export default function PropertyFeatures({ property }: PropertyFeaturesProps) {
     {
       title: 'Property Details',
       items: [
-        { label: 'Property Type', value: property.propertyType?.replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase()) },
+        { label: 'Property Type', value: property.propertyType?.replace('_', ' ').toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) },
         { label: 'Bedrooms', value: property.bedrooms },
         { label: 'Bathrooms', value: property.bathrooms },
         { label: 'Reception Rooms', value: property.receptionRooms },
