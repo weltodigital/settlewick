@@ -1,0 +1,491 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users and authentication
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  password     String?   // nullable for social auth
+  role         UserRole  @default(USER)
+  agentId      String?   @map("agent_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  agent            Agent?             @relation(fields: [agentId], references: [id])
+  savedProperties  SavedProperty[]
+  hiddenProperties HiddenProperty[]
+  savedSearches    SavedSearch[]
+  propertyEnquiries PropertyEnquiry[]
+  propertyViews    PropertyView[]
+  createdProperties Property[] @relation("PropertyCreator")
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  AGENT
+  ADMIN
+}
+
+// Estate agents
+model Agent {
+  id              String  @id @default(cuid())
+  name            String
+  slug            String  @unique
+  branchName      String? @map("branch_name")
+  email           String
+  phone           String?
+  websiteUrl      String? @map("website_url")
+  logoUrl         String? @map("logo_url")
+  addressLine1    String  @map("address_line_1")
+  addressTown     String  @map("address_town")
+  addressPostcode String  @map("address_postcode")
+  latitude        Float?
+  longitude       Float?
+  description     String?
+  subscriptionTier SubscriptionTier @default(FREE) @map("subscription_tier")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users           User[]
+  properties      Property[]
+  propertyEnquiries PropertyEnquiry[]
+
+  @@map("agents")
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+// Main properties table
+model Property {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  listingType      ListingType   @map("listing_type")
+  status           PropertyStatus
+  price            Int           // in pence
+  priceQualifier   PriceQualifier? @map("price_qualifier")
+  propertyType     PropertyType  @map("property_type")
+  newBuild         Boolean       @default(false) @map("new_build")
+
+  // Address
+  addressLine1     String        @map("address_line_1")
+  addressLine2     String?       @map("address_line_2")
+  addressTown      String        @map("address_town")
+  addressCounty    String?       @map("address_county")
+  addressPostcode  String        @map("address_postcode")
+  latitude         Float
+  longitude        Float
+  // location field for PostGIS will be handled via raw queries
+
+  // Core specs
+  bedrooms         Int?
+  bathrooms        Int?
+  receptionRooms   Int?          @map("reception_rooms")
+  floorAreaSqft    Int?          @map("floor_area_sqft")
+  floorAreaSqm     Float?        @map("floor_area_sqm")
+  plotSizeSqft     Int?          @map("plot_size_sqft")
+  floorLevel       FloorLevel?   @map("floor_level")
+
+  // Tenure & leasehold details
+  tenure                   Tenure
+  leaseLengthRemaining     Int?     @map("lease_length_remaining") // years
+  serviceChargeAnnual      Int?     @map("service_charge_annual") // pence
+  groundRentAnnual         Int?     @map("ground_rent_annual") // pence
+
+  // Energy
+  epcRating                String?  @map("epc_rating") // A-G
+  epcPotentialRating       String?  @map("epc_potential_rating") // A-G
+  heatingType              HeatingType? @map("heating_type")
+  mainsGas                 Boolean? @map("mains_gas")
+  mainsSewer               Boolean? @map("mains_sewer")
+  estimatedAnnualEnergyCost Int?    @map("estimated_annual_energy_cost") // pence
+
+  // Outdoor & parking
+  gardenType               GardenType? @map("garden_type")
+  gardenOrientation        Orientation? @map("garden_orientation")
+  parkingType              ParkingType? @map("parking_type")
+  evCharging               Boolean  @default(false) @map("ev_charging")
+
+  // Property features (boolean flags)
+  periodProperty           Boolean  @default(false) @map("period_property")
+  modern                   Boolean  @default(false)
+  cottage                  Boolean  @default(false)
+  fixerUpper               Boolean  @default(false) @map("fixer_upper")
+  utilityRoom              Boolean  @default(false) @map("utility_room")
+  basement                 Boolean  @default(false)
+  conservatory             Boolean  @default(false)
+  homeOffice               Boolean  @default(false) @map("home_office")
+  enSuite                  Boolean  @default(false) @map("en_suite")
+  bathtub                  Boolean  @default(false)
+  patio                    Boolean  @default(false)
+  kitchenIsland            Boolean  @default(false) @map("kitchen_island")
+  loftConversion           Boolean  @default(false) @map("loft_conversion")
+  annexe                   Boolean  @default(false)
+  openPlanKitchen          Boolean  @default(false) @map("open_plan_kitchen")
+  separateDiningRoom       Boolean  @default(false) @map("separate_dining_room")
+  downstairsWc             Boolean  @default(false) @map("downstairs_wc")
+  doubleGlazing            Boolean  @default(false) @map("double_glazing")
+  logBurner                Boolean  @default(false) @map("log_burner")
+  solarPanels              Boolean  @default(false) @map("solar_panels")
+  underfloorHeating        Boolean  @default(false) @map("underfloor_heating")
+  wetRoom                  Boolean  @default(false) @map("wet_room")
+  walkInWardrobe           Boolean  @default(false) @map("walk_in_wardrobe")
+  bifoldDoors              Boolean  @default(false) @map("bifold_doors")
+  bayWindows               Boolean  @default(false) @map("bay_windows")
+  originalFeatures         Boolean  @default(false) @map("original_features")
+  cellar                   Boolean  @default(false)
+  garage                   Boolean  @default(false)
+  outbuildings             Boolean  @default(false)
+  swimmingPool             Boolean  @default(false) @map("swimming_pool")
+  balcony                  Boolean  @default(false)
+  roofTerrace              Boolean  @default(false) @map("roof_terrace")
+
+  // Rental-specific
+  furnished                Furnished?
+  petsAllowed              Boolean? @map("pets_allowed")
+  billsIncluded            Boolean? @map("bills_included")
+  depositAmount            Int?     @map("deposit_amount") // pence
+  availableFrom            DateTime? @map("available_from")
+  minTenancyMonths         Int?     @map("min_tenancy_months")
+
+  // Status & transparency
+  chainFree                Boolean? @map("chain_free")
+  listedDate               DateTime @default(now()) @map("listed_date")
+  priceChangedDate         DateTime? @map("price_changed_date")
+  originalPrice            Int?     @map("original_price") // pence
+
+  // Content
+  description              String?
+  summary                  String?  // short description for cards
+
+  // Relationships
+  agentId                  String   @map("agent_id")
+  createdBy                String   @map("created_by")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  agent            Agent             @relation(fields: [agentId], references: [id])
+  creator          User              @relation("PropertyCreator", fields: [createdBy], references: [id])
+  images           PropertyImage[]
+  priceHistory     PropertyPriceHistory[]
+  savedBy          SavedProperty[]
+  hiddenBy         HiddenProperty[]
+  enquiries        PropertyEnquiry[]
+  views            PropertyView[]
+
+  @@map("properties")
+}
+
+enum ListingType {
+  SALE
+  RENT
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  UNDER_OFFER
+  SSTC // Sold Subject to Contract
+  SOLD
+  LET_AGREED
+  LET
+}
+
+enum PriceQualifier {
+  GUIDE_PRICE
+  OFFERS_OVER
+  OFFERS_IN_REGION
+  FIXED_PRICE
+  FROM
+  POA // Price on Application
+}
+
+enum PropertyType {
+  DETACHED
+  SEMI_DETACHED
+  TERRACED
+  FLAT
+  BUNGALOW
+  MAISONETTE
+  COTTAGE
+  TOWN_HOUSE
+  PARK_HOME
+  LAND
+  OTHER
+}
+
+enum FloorLevel {
+  GROUND
+  FIRST
+  SECOND
+  UPPER
+  TOP
+}
+
+enum Tenure {
+  FREEHOLD
+  LEASEHOLD
+  SHARE_OF_FREEHOLD
+  COMMONHOLD
+}
+
+enum HeatingType {
+  GAS_CENTRAL
+  ELECTRIC
+  OIL
+  HEAT_PUMP
+  BIOMASS
+  DISTRICT
+  OTHER
+}
+
+enum GardenType {
+  PRIVATE
+  COMMUNAL
+  NONE
+}
+
+enum Orientation {
+  NORTH
+  SOUTH
+  EAST
+  WEST
+}
+
+enum ParkingType {
+  DRIVEWAY
+  GARAGE
+  ALLOCATED
+  ON_STREET
+  NONE
+}
+
+enum Furnished {
+  FURNISHED
+  UNFURNISHED
+  PART_FURNISHED
+}
+
+// Property images
+model PropertyImage {
+  id           String      @id @default(cuid())
+  propertyId   String      @map("property_id")
+  imageUrl     String      @map("image_url")
+  caption      String?
+  displayOrder Int         @map("display_order")
+  isFloorplan  Boolean     @default(false) @map("is_floorplan")
+  isPrimary    Boolean     @default(false) @map("is_primary")
+  roomTag      RoomTag?    @map("room_tag")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  property     Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_images")
+}
+
+enum RoomTag {
+  KITCHEN
+  LIVING_ROOM
+  BEDROOM_1
+  BEDROOM_2
+  BEDROOM_3
+  BEDROOM_4
+  BATHROOM
+  GARDEN
+  EXTERIOR
+  OTHER
+}
+
+// Property price history
+model PropertyPriceHistory {
+  id         String                    @id @default(cuid())
+  propertyId String                    @map("property_id")
+  eventType  PropertyPriceHistoryEvent @map("event_type")
+  price      Int                       // pence
+  date       DateTime
+  createdAt  DateTime                  @default(now()) @map("created_at")
+
+  // Relations
+  property   Property                  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_price_history")
+}
+
+enum PropertyPriceHistoryEvent {
+  LISTED
+  PRICE_REDUCED
+  PRICE_INCREASED
+  SSTC
+  UNDER_OFFER
+  BACK_ON_MARKET
+  SOLD
+  WITHDRAWN
+  LET_AGREED
+  LET
+}
+
+// User saved properties
+model SavedProperty {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  propertyId String   @map("property_id")
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@map("saved_properties")
+}
+
+// User hidden properties
+model HiddenProperty {
+  id         String      @id @default(cuid())
+  userId     String      @map("user_id")
+  propertyId String      @map("property_id")
+  reason     HideReason?
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@map("hidden_properties")
+}
+
+enum HideReason {
+  TOO_SMALL
+  TOO_EXPENSIVE
+  WRONG_AREA
+  NOT_INTERESTED
+  OTHER
+}
+
+// User saved searches
+model SavedSearch {
+  id             String            @id @default(cuid())
+  userId         String            @map("user_id")
+  name           String
+  searchParams   Json              @map("search_params") // JSONB stores all filter state
+  alertEnabled   Boolean           @default(false) @map("alert_enabled")
+  alertFrequency AlertFrequency    @default(DAILY) @map("alert_frequency")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_searches")
+}
+
+enum AlertFrequency {
+  INSTANT
+  DAILY
+  WEEKLY
+}
+
+// Property enquiries
+model PropertyEnquiry {
+  id           String        @id @default(cuid())
+  propertyId   String        @map("property_id")
+  userId       String?       @map("user_id") // nullable for anonymous enquiries
+  agentId      String        @map("agent_id")
+  name         String
+  email        String
+  phone        String?
+  message      String
+  enquiryType  EnquiryType   @map("enquiry_type")
+  status       EnquiryStatus @default(NEW)
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  agent        Agent         @relation(fields: [agentId], references: [id])
+
+  @@map("property_enquiries")
+}
+
+enum EnquiryType {
+  VIEWING_REQUEST
+  MORE_INFO
+  GENERAL
+}
+
+enum EnquiryStatus {
+  NEW
+  READ
+  RESPONDED
+}
+
+// Property views analytics
+model PropertyView {
+  id         String   @id @default(cuid())
+  propertyId String   @map("property_id")
+  userId     String?  @map("user_id") // nullable for anonymous views
+  sessionId  String   @map("session_id")
+  viewedAt   DateTime @default(now()) @map("viewed_at")
+
+  // Relations
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("property_views")
+}
+
+// Sold prices from Land Registry
+model SoldPrice {
+  id           String      @id @default(cuid())
+  address      String
+  postcode     String
+  price        Int         // in pence
+  dateSold     DateTime    @map("date_sold")
+  propertyType PropertyType @map("property_type")
+  newBuild     Boolean     @default(false) @map("new_build")
+  tenure       Tenure
+  latitude     Float?
+  longitude    Float?
+  // location field for PostGIS will be handled via raw queries
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  @@map("sold_prices")
+}
+
+// Area guides for SEO
+model AreaGuide {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  parentArea     String?  @map("parent_area")
+  postcodePrefix String   @map("postcode_prefix")
+  description    String?
+  latitude       Float?
+  longitude      Float?
+  averagePrice   Int?     @map("average_price") // pence
+  averageRent    Int?     @map("average_rent") // pence per month
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("area_guides")
+}
