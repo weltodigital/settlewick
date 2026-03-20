@@ -32,8 +32,8 @@ export default function HomePage() {
     },
     {
       icon: <Users className="w-8 h-8 text-accent" />,
-      title: 'Built for Portsmouth',
-      description: 'Local insights, area guides, and community knowledge from people who know Portsmouth.'
+      title: 'UK-Wide Coverage',
+      description: 'Comprehensive property search across the UK with local insights and community knowledge.'
     }
   ]
 
@@ -44,11 +44,15 @@ export default function HomePage() {
     { number: '100%', label: 'Ad-Free Experience' }
   ]
 
-  const areaGuides = [
-    { name: 'Southsea', path: '/area-guide/southsea', description: 'Vibrant seafront area with independent shops and cafes' },
-    { name: 'Old Portsmouth', path: '/area-guide/old-portsmouth', description: 'Historic cobbled streets and maritime heritage' },
-    { name: 'Fratton', path: '/area-guide/fratton', description: 'Up-and-coming area with Victorian terraces' },
-    { name: 'Cosham', path: '/area-guide/cosham', description: 'Family-friendly suburb with good transport links' }
+  const popularLocations = [
+    { name: 'London', path: '/for-sale/london', description: 'Capital city with diverse property options' },
+    { name: 'Manchester', path: '/for-sale/manchester', description: 'Vibrant northern city with strong rental market' },
+    { name: 'Birmingham', path: '/for-sale/birmingham', description: 'Major city with regeneration opportunities' },
+    { name: 'Portsmouth', path: '/for-sale/portsmouth', description: 'Historic naval port with waterfront living' },
+    { name: 'Bristol', path: '/for-sale/bristol', description: 'Creative city with period properties' },
+    { name: 'Leeds', path: '/for-sale/leeds', description: 'Major northern city with diverse housing' },
+    { name: 'Edinburgh', path: '/for-sale/edinburgh', description: 'Scottish capital with period architecture' },
+    { name: 'Liverpool', path: '/for-sale/liverpool', description: 'Waterfront city with character properties' }
   ]
 
   return (
@@ -107,7 +111,7 @@ export default function HomePage() {
               Search with Our Interactive Map
             </h2>
             <p className="text-text-secondary">
-              Visualize properties on the map, draw custom search areas, and explore Portsmouth neighborhoods
+              Visualize properties on the map, draw custom search areas, and explore neighborhoods across the UK
             </p>
           </div>
 
@@ -117,31 +121,31 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Area Guides Section */}
+      {/* Popular Locations Section */}
       <section className="py-20">
         <div className="max-w-8xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-text-primary mb-4">
-              Explore Portsmouth Areas
+              Properties for Sale Across the UK
             </h2>
             <p className="text-text-secondary">
-              Local insights and property data for Portsmouth's most popular areas
+              Explore popular locations and find your perfect home
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {areaGuides.map((area) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {popularLocations.map((location) => (
               <Link
-                key={area.name}
-                href={area.path}
-                className="card p-6 hover:shadow-lg transition-shadow"
+                key={location.name}
+                href={location.path}
+                className="card p-4 hover:shadow-lg transition-shadow text-center"
               >
-                <h3 className="text-xl font-semibold text-text-primary mb-2">
-                  {area.name}
+                <h3 className="text-lg font-semibold text-text-primary mb-1">
+                  {location.name}
                 </h3>
-                <p className="text-text-secondary text-sm">{area.description}</p>
-                <div className="mt-4 text-accent text-sm font-medium">
-                  View area guide →
+                <p className="text-text-secondary text-sm">{location.description}</p>
+                <div className="mt-3 text-accent text-sm font-medium">
+                  View properties →
                 </div>
               </Link>
             ))}
@@ -267,10 +271,10 @@ export default function HomePage() {
       <section className="py-20 bg-primary text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Stay updated with Portsmouth property news
+            Stay updated with UK property market news
           </h2>
           <p className="text-white/80 mb-8">
-            Get weekly insights on Portsmouth property market trends, new listings, and local area updates.
+            Get weekly insights on UK property market trends, new listings, and local area updates.
           </p>
           <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
             <input

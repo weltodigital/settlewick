@@ -38,6 +38,11 @@ export async function searchProperties(
     limit = 20,
     excludeHidden = false,
     userId,
+    // Size filters
+    receptionRoomsMin,
+    floorAreaMin,
+    floorAreaMax,
+    plotSizeMin,
     // Boolean features
     chainFree,
     newBuild,
@@ -53,15 +58,23 @@ export async function searchProperties(
     patio,
     garage,
     balcony,
+    garden,
+    parking,
     // Rental specific
     furnished,
+    unfurnished,
+    partFurnished,
     petsAllowed,
     billsIncluded,
+    studentsWelcome,
+    smokers,
     // Other filters
     tenure,
     epcRating,
     gardenType,
-    parkingType
+    parkingType,
+    minYearBuilt,
+    maxYearBuilt
   } = filters
 
   // Handle spatial queries first
@@ -202,6 +215,12 @@ export async function searchProperties(
     query = query.in('property_type', convertedTypes as any)
   }
 
+  // Size filters
+  if (receptionRoomsMin) query = query.gte('reception_rooms', receptionRoomsMin)
+  if (floorAreaMin) query = query.gte('floor_area_sqft', floorAreaMin)
+  if (floorAreaMax) query = query.lte('floor_area_sqft', floorAreaMax)
+  if (plotSizeMin) query = query.gte('plot_size_sqft', plotSizeMin)
+
   // Boolean features
   if (chainFree === true) query = query.eq('chain_free', true)
   if (newBuild === true) query = query.eq('new_build', true)
@@ -217,6 +236,8 @@ export async function searchProperties(
   if (patio === true) query = query.eq('patio', true)
   if (garage === true) query = query.eq('garage', true)
   if (balcony === true) query = query.eq('balcony', true)
+  if (garden === true) query = query.eq('garden', true)
+  if (parking === true) query = query.eq('parking', true)
 
   // Tenure
   if (tenure && tenure.length > 0) {
@@ -241,13 +262,22 @@ export async function searchProperties(
     query = query.in('parking_type', convertedParkingType as any)
   }
 
+  // Age/style filters
+  if (minYearBuilt) query = query.gte('year_built', minYearBuilt)
+  if (maxYearBuilt) query = query.lte('year_built', maxYearBuilt)
+
   // Rental specific filters
   if (furnished && furnished.length > 0) {
     const convertedFurnished = furnished.map(f => f.toLowerCase())
     query = query.in('furnished', convertedFurnished as any)
   }
+  if (furnished === true) query = query.eq('furnished', 'furnished')
+  if (unfurnished === true) query = query.eq('furnished', 'unfurnished')
+  if (partFurnished === true) query = query.eq('furnished', 'part_furnished')
   if (petsAllowed === true) query = query.eq('pets_allowed', true)
   if (billsIncluded === true) query = query.eq('bills_included', true)
+  if (studentsWelcome === true) query = query.eq('students_welcome', true)
+  if (smokers === true) query = query.eq('smokers_allowed', true)
 
   // Location search (text-based)
   if (location) {

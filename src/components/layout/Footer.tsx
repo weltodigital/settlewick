@@ -9,10 +9,10 @@ export default function Footer() {
           <div className="col-span-1">
             <div className="text-2xl font-bold mb-4">Settlewick</div>
             <p className="text-sm text-white/80 mb-4">
-              Search properly. Find your perfect home in Portsmouth with comprehensive filters and detailed local insights.
+              Search properties across the UK with comprehensive filters and detailed local insights.
             </p>
             <p className="text-sm text-white/60">
-              Built in Portsmouth, for Portsmouth.
+              Your trusted UK property search platform.
             </p>
           </div>
 
@@ -20,16 +20,16 @@ export default function Footer() {
           <div className="col-span-1">
             <h3 className="font-semibold mb-4">Property Search</h3>
             <div className="space-y-3 text-sm">
-              <Link href="/for-sale/portsmouth" className="block hover:text-accent transition-colors">
+              <Link href="/for-sale" className="block hover:text-accent transition-colors">
                 Properties for Sale
               </Link>
-              <Link href="/to-rent/portsmouth" className="block hover:text-accent transition-colors">
+              <Link href="/to-rent" className="block hover:text-accent transition-colors">
                 Properties to Rent
               </Link>
-              <Link href="/sold-prices/portsmouth" className="block hover:text-accent transition-colors">
+              <Link href="/sold-prices" className="block hover:text-accent transition-colors">
                 Sold House Prices
               </Link>
-              <Link href="/area-guide/southsea" className="block hover:text-accent transition-colors">
+              <Link href="/area-guides" className="block hover:text-accent transition-colors">
                 Area Guides
               </Link>
             </div>
@@ -79,7 +79,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-white/60">
             <p>&copy; 2025 Settlewick. All rights reserved.</p>
             <p>
-              Designed & built in Portsmouth with{' '}
+              Designed & built in the UK with{' '}
               <span className="text-accent">♥</span>
             </p>
           </div>

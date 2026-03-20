@@ -25,12 +25,28 @@ export async function GET(request: NextRequest) {
       sortBy: (searchParams.get('sortBy') as any) || 'newest',
       page: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
       limit: searchParams.get('limit') ? Number(searchParams.get('limit')) : 20,
+
+      // Size filters
+      receptionRoomsMin: searchParams.get('receptionRoomsMin') ? Number(searchParams.get('receptionRoomsMin')) : undefined,
+      floorAreaMin: searchParams.get('floorAreaMin') ? Number(searchParams.get('floorAreaMin')) : undefined,
+      floorAreaMax: searchParams.get('floorAreaMax') ? Number(searchParams.get('floorAreaMax')) : undefined,
+      plotSizeMin: searchParams.get('plotSizeMin') ? Number(searchParams.get('plotSizeMin')) : undefined,
+
+      // Multi-select filters
+      tenure: searchParams.getAll('tenure').length > 0 ? searchParams.getAll('tenure') as any : undefined,
+      epcRating: searchParams.getAll('epcRating').length > 0 ? searchParams.getAll('epcRating') as any : undefined,
+      gardenType: searchParams.getAll('gardenType').length > 0 ? searchParams.getAll('gardenType') as any : undefined,
+      parkingType: searchParams.getAll('parkingType').length > 0 ? searchParams.getAll('parkingType') as any : undefined,
+      furnished: searchParams.getAll('furnished').length > 0 ? searchParams.getAll('furnished') as any : undefined,
+
     }
 
     // Parse boolean filters
     const booleanFilters = [
       'chainFree', 'newBuild', 'garage', 'garden', 'parking',
-      'periodProperty', 'modern', 'cottage'
+      'periodProperty', 'modern', 'cottage', 'utilityRoom', 'basement',
+      'conservatory', 'homeOffice', 'enSuite', 'bathtub', 'patio', 'balcony',
+      'petsAllowed', 'billsIncluded'
     ] as const
 
     booleanFilters.forEach(filter => {

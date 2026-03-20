@@ -3,16 +3,17 @@ import { Metadata } from 'next'
 import { generateMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = generateMetadata({
-  title: 'Sold House Prices - Property History & Market Analysis',
-  description: 'Search sold house prices in Portsmouth. View property history, market trends and price analysis. Free access to sold property data and market insights.',
+  title: 'Sold House Prices UK | Property History & Market Analysis | Settlewick',
+  description: 'Search sold house prices across the UK. View property history, market trends and price analysis. Free access to sold property data and market insights.',
   keywords: [
-    'sold house prices Portsmouth',
-    'property history Portsmouth',
+    'sold house prices UK',
+    'property history UK',
     'sold prices search',
-    'Portsmouth market analysis',
+    'UK market analysis',
     'house price trends',
     'property market data',
-    'sold property prices'
+    'sold property prices',
+    'land registry prices'
   ],
   url: '/sold-prices'
 })

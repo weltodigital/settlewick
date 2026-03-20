@@ -55,8 +55,8 @@ export default function Header() {
             <Link href="/area-guides" className="hover:text-accent transition-colors">
               Area Guides
             </Link>
-            <Link href="/mortgage-calculator" className="hover:text-accent transition-colors">
-              Mortgage
+            <Link href="/stamp-duty-calculator" className="hover:text-accent transition-colors">
+              Stamp Duty
             </Link>
           </nav>
 
@@ -145,8 +145,8 @@ export default function Header() {
               <Link href="/area-guides" className="hover:text-accent transition-colors">
                 Area Guides
               </Link>
-              <Link href="/mortgage-calculator" className="hover:text-accent transition-colors">
-                Mortgage
+              <Link href="/stamp-duty-calculator" className="hover:text-accent transition-colors">
+                Stamp Duty
               </Link>
               <hr className="border-primary-light" />
               {user ? (

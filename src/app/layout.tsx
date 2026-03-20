@@ -6,13 +6,13 @@ import { AuthProvider } from '@/providers/SessionProvider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Settlewick | Find Your Perfect Home in Portsmouth',
-  description: 'Search properly. Find properties for sale and to rent in Portsmouth with comprehensive filters, detailed information, and local insights.',
-  keywords: 'Portsmouth property, houses for sale Portsmouth, flats to rent Portsmouth, estate agents Portsmouth',
+  title: 'Settlewick | UK Property Search with Every Filter You Need',
+  description: 'Search properly. Find properties for sale and to rent across the UK with comprehensive filters, detailed information, and local insights.',
+  keywords: 'UK property, houses for sale UK, flats to rent UK, property search UK, estate agents UK, stamp duty calculator, mortgage calculator',
   openGraph: {
-    title: 'Settlewick | Find Your Perfect Home in Portsmouth',
-    description: 'Search properly. Find properties for sale and to rent in Portsmouth with comprehensive filters, detailed information, and local insights.',
-    url: 'https://settlewick.com',
+    title: 'Settlewick | UK Property Search with Every Filter You Need',
+    description: 'Search properly. Find properties for sale and to rent across the UK with comprehensive filters, detailed information, and local insights.',
+    url: 'https://www.settlewick.co.uk',
     siteName: 'Settlewick',
     images: [
       {
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Settlewick | Find Your Perfect Home in Portsmouth',
-    description: 'Search properly. Find properties for sale and to rent in Portsmouth.',
+    title: 'Settlewick | UK Property Search with Every Filter You Need',
+    description: 'Search properly. Find properties for sale and to rent across the UK.',
     images: ['/images/og-image.jpg'],
   },
   robots: {
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: 'https://settlewick.com',
+    canonical: 'https://www.settlewick.co.uk',
   },
 }
 

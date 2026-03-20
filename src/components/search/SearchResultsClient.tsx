@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import SearchResultsWithMap from '@/components/search/SearchResultsWithMap'
+import ActiveFilterPills from '@/components/search/ActiveFilterPills'
 import type { PropertyWithDetails } from '@/types/property'
 import type { PropertyFilters } from '@/types/filters'
 
@@ -14,8 +15,26 @@ interface SearchResultData {
   filters: PropertyFilters
 }
 
+interface Location {
+  id: string
+  name: string
+  slug: string
+  location_type: string
+  description?: string
+  latitude?: number
+  longitude?: number
+  property_count_sale?: number
+  property_count_rent?: number
+  average_price?: number
+  average_rent?: number
+  parent?: {
+    name: string
+    slug: string
+  }
+}
+
 interface SearchResultsClientProps {
-  location: string
+  location: Location
   searchParams: { [key: string]: string | string[] | undefined }
   listingType: 'SALE' | 'RENT'
 }
@@ -26,6 +45,7 @@ export default function SearchResultsClient({
   listingType
 }: SearchResultsClientProps) {
   const router = useRouter()
+  const currentSearchParams = useSearchParams()
 
   const [results, setResults] = useState<SearchResultData>({
     properties: [],
@@ -36,16 +56,11 @@ export default function SearchResultsClient({
   })
   const [loading, setLoading] = useState(true)
 
-  // Parse location from URL
-  const locationFormatted = location
-    ? location.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
-    : ''
-
   // Parse filters from URL search params
   const getFiltersFromURL = (): PropertyFilters => {
     const filters: PropertyFilters = {
       listingType,
-      location: locationFormatted || undefined
+      location: location.name
     }
 
     // Price range
@@ -165,6 +180,44 @@ export default function SearchResultsClient({
     setResults(prev => ({ ...prev, filters: updatedFilters }))
   }
 
+  const handleRemoveFilter = (key: keyof PropertyFilters, value?: string) => {
+    const currentFilters = { ...results.filters }
+
+    if (value && Array.isArray(currentFilters[key])) {
+      // Remove specific value from array
+      const array = currentFilters[key] as string[]
+      const updatedArray = array.filter(item => item !== value)
+      currentFilters[key] = updatedArray.length > 0 ? updatedArray as any : undefined
+    } else if (key === 'priceMin' || key === 'priceMax') {
+      // Handle price range removal
+      if (key === 'priceMin') {
+        currentFilters.priceMin = undefined
+      } else {
+        currentFilters.priceMax = undefined
+      }
+    } else if (key === 'floorAreaMin' || key === 'floorAreaMax') {
+      // Handle floor area removal
+      if (key === 'floorAreaMin') {
+        currentFilters.floorAreaMin = undefined
+      } else {
+        currentFilters.floorAreaMax = undefined
+      }
+    } else {
+      // Remove entire filter
+      currentFilters[key] = undefined as any
+    }
+
+    handleFiltersChange(currentFilters)
+  }
+
+  const handleClearAllFilters = () => {
+    const basicFilters: PropertyFilters = {
+      listingType: results.filters.listingType,
+      location: results.filters.location
+    }
+    handleFiltersChange(basicFilters)
+  }
+
   // Load initial data
   useEffect(() => {
     const filters = getFiltersFromURL()
@@ -175,19 +228,29 @@ export default function SearchResultsClient({
   // Update page title
   useEffect(() => {
     const actionText = listingType === 'SALE' ? 'for Sale' : 'to Rent'
-    const title = locationFormatted
-      ? `Properties ${actionText} in ${locationFormatted} | Settlewick`
-      : `Properties ${actionText} | Settlewick`
+    const parentLocation = location.parent?.name
+    const fullLocationName = parentLocation
+      ? `${location.name}, ${parentLocation}`
+      : location.name
+    const title = `Properties ${actionText} in ${fullLocationName} | Settlewick`
     document.title = title
-  }, [locationFormatted, listingType])
+  }, [location, listingType])
 
   return (
-    <SearchResultsWithMap
-      properties={results.properties}
-      total={results.total}
-      filters={results.filters}
-      onFiltersChange={handleFiltersChange}
-      loading={loading}
-    />
+    <div className="space-y-6">
+      <ActiveFilterPills
+        filters={results.filters}
+        onRemoveFilter={handleRemoveFilter}
+        onClearAll={handleClearAllFilters}
+      />
+
+      <SearchResultsWithMap
+        properties={results.properties}
+        total={results.total}
+        filters={results.filters}
+        onFiltersChange={handleFiltersChange}
+        loading={loading}
+      />
+    </div>
   )
 }

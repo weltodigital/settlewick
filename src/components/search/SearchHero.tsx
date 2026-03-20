@@ -50,12 +50,12 @@ export default function SearchHero() {
   }
 
   const popularSearches = [
-    { label: 'Southsea', path: '/for-sale/southsea' },
-    { label: 'Old Portsmouth', path: '/for-sale/old-portsmouth' },
-    { label: 'Fratton', path: '/for-sale/fratton' },
-    { label: 'Cosham', path: '/for-sale/cosham' },
-    { label: 'PO4', path: '/for-sale/po4' },
-    { label: 'PO1', path: '/for-sale/po1' }
+    { label: 'London', path: '/for-sale/london' },
+    { label: 'Manchester', path: '/for-sale/manchester' },
+    { label: 'Birmingham', path: '/for-sale/birmingham' },
+    { label: 'Portsmouth', path: '/for-sale/portsmouth' },
+    { label: 'Bristol', path: '/for-sale/bristol' },
+    { label: 'Leeds', path: '/for-sale/leeds' }
   ]
 
   return (
@@ -67,9 +67,9 @@ export default function SearchHero() {
         </h1>
 
         <p className="text-lg sm:text-xl lg:text-2xl text-text-secondary mb-8 lg:mb-12 px-4">
-          Find your perfect home in Portsmouth with comprehensive filters,
+          The UK property search with every filter you've ever wished for.
           <br className="hidden sm:block" />
-          detailed information, and local insights.
+          Comprehensive data, powerful tools, transparent results.
         </p>
 
         {/* Search Form */}
