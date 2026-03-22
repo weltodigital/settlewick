@@ -351,9 +351,9 @@ export default function FilterPanel({
                         >
                           <input
                             type="checkbox"
-                            checked={filters.furnished?.includes(option as any) || false}
+                            checked={Array.isArray(filters.furnished) ? filters.furnished?.includes(option as any) || false : false}
                             onChange={(e) => {
-                              const current = filters.furnished || []
+                              const current = Array.isArray(filters.furnished) ? filters.furnished || [] : []
                               const updated = e.target.checked
                                 ? [...current, option as any]
                                 : current.filter(v => v !== option)

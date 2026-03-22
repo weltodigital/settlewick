@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { generateSearchMetadata } from '@/lib/seo'
 import SearchResultsClient from '@/components/search/SearchResultsClient'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
@@ -14,8 +14,9 @@ async function getLocationData(slugPath: string) {
   const slugs = slugPath.split('/')
   const locationSlug = slugs[slugs.length - 1]
 
+  const supabase = createClient()
   const { data: location, error } = await supabase
-    .from('locations')
+    .from('locations' as any)
     .select(`
       id,
       name,
@@ -64,10 +65,10 @@ export async function generateMetadata({ params, searchParams }: ForSalePageProp
       : searchParams.propertyType
   }
 
-  const parentLocation = location.parent?.name
+  const parentLocation = (location as any)?.parent?.name
   const fullLocationName = parentLocation
-    ? `${location.name}, ${parentLocation}`
-    : location.name
+    ? `${(location as any).name}, ${parentLocation}`
+    : (location as any).name
 
   return generateSearchMetadata({
     location: fullLocationName,
@@ -91,16 +92,16 @@ export default async function ForSalePage({ params, searchParams }: ForSalePageP
   ]
 
   // Add parent locations to breadcrumb if they exist
-  if (location.parent) {
+  if ((location as any).parent) {
     breadcrumbItems.push({
-      name: location.parent.name,
-      url: `https://www.settlewick.co.uk/for-sale/${location.parent.slug}`
+      name: (location as any).parent.name,
+      url: `https://www.settlewick.co.uk/for-sale/${(location as any).parent.slug}`
     })
   }
 
   // Add current location
   breadcrumbItems.push({
-    name: location.name,
+    name: (location as any).name,
     url: `https://www.settlewick.co.uk/for-sale/${slugPath}`
   })
 
@@ -109,7 +110,7 @@ export default async function ForSalePage({ params, searchParams }: ForSalePageP
       <BreadcrumbSchema items={breadcrumbItems} />
       <div className="max-w-8xl mx-auto px-4 py-8">
         <SearchResultsClient
-          location={location}
+          location={location as any}
           searchParams={searchParams}
           listingType="SALE"
         />

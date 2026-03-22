@@ -1,7 +1,7 @@
-import { supabase } from '@/lib/supabase/client'
+import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
 import SoldPricesTemplate from '@/components/sold-prices/SoldPricesTemplate'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
-import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { generateMetadata as generateSEOMetadata } from '@/lib/seo'
 
@@ -23,8 +23,9 @@ async function getLocationData(slugPath: string) {
   const slugs = slugPath.split('/')
   const locationSlug = slugs[slugs.length - 1]
 
+  const supabase = createClient()
   const { data: location, error } = await supabase
-    .from('locations')
+    .from('locations' as any)
     .select(`
       id,
       name,
@@ -65,27 +66,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Get recent sales count for metadata
+  const supabase = createClient()
   const { count: salesCount } = await supabase
-    .from('sold_prices')
+    .from('sold_prices' as any)
     .select('*', { count: 'exact', head: true })
-    .ilike('address', `%${location.name}%`)
+    .ilike('address', `%${(location as any).name}%`)
 
-  const parentLocation = location.parent?.name
+  const parentLocation = (location as any).parent?.name
   const fullLocationName = parentLocation
-    ? `${location.name}, ${parentLocation}`
-    : location.name
+    ? `${(location as any).name}, ${parentLocation}`
+    : (location as any).name
 
-  const avgPriceText = location.average_price
-    ? ` with an average price of £${Math.round(location.average_price / 100).toLocaleString()}`
+  const avgPriceText = (location as any).average_price
+    ? ` with an average price of £${Math.round((location as any).average_price / 100).toLocaleString()}`
     : ''
 
   return generateSEOMetadata({
     title: `Sold House Prices in ${fullLocationName} | Settlewick`,
     description: `See recent sold house prices in ${fullLocationName}. ${salesCount || 'Recent'} properties sold in the last 12 months${avgPriceText}.`,
     keywords: [
-      `${location.name} sold prices`,
-      `${location.name} house prices`,
-      `sold prices ${location.name}`,
+      `${(location as any).name} sold prices`,
+      `${(location as any).name} house prices`,
+      `sold prices ${(location as any).name}`,
       'house prices',
       'sold house prices',
       'property prices',
@@ -111,16 +113,16 @@ export default async function SoldPricesPage({ params, searchParams }: Props) {
   ]
 
   // Add parent locations to breadcrumb if they exist
-  if (location.parent) {
+  if ((location as any).parent) {
     breadcrumbItems.push({
-      name: location.parent.name,
-      url: `https://www.settlewick.co.uk/sold-prices/${location.parent.slug}`
+      name: (location as any).parent.name,
+      url: `https://www.settlewick.co.uk/sold-prices/${(location as any).parent.slug}`
     })
   }
 
   // Add current location
   breadcrumbItems.push({
-    name: location.name,
+    name: (location as any).name,
     url: `https://www.settlewick.co.uk/sold-prices/${slugPath}`
   })
 
@@ -130,7 +132,7 @@ export default async function SoldPricesPage({ params, searchParams }: Props) {
       <div className="min-h-screen bg-background py-12">
         <div className="max-w-8xl mx-auto px-4">
           <SoldPricesTemplate
-            location={location}
+            location={location as any}
             searchParams={searchParams}
           />
         </div>

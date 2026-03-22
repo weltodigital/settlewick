@@ -248,7 +248,7 @@ async function seedLocations() {
 
     for (const region of UK_REGIONS) {
       const { data: location, error } = await supabaseAdmin
-        .from('locations')
+        .from('locations' as any)
         .insert({
           name: region.name,
           slug: region.slug,
@@ -268,8 +268,8 @@ async function seedLocations() {
       if (error) {
         console.error(`Error creating region ${region.name}:`, error)
       } else {
-        regionMap.set(region.name, location.id)
-        locationsInserted.push(location)
+        regionMap.set(region.name, (location as any).id)
+        locationsInserted.push(location as any)
         console.log(`✅ Created region: ${region.name}`)
       }
     }
@@ -282,7 +282,7 @@ async function seedLocations() {
       const parentId = regionMap.get(county.parent_region)
 
       const { data: location, error } = await supabaseAdmin
-        .from('locations')
+        .from('locations' as any)
         .insert({
           name: county.name,
           slug: county.slug,
@@ -303,8 +303,8 @@ async function seedLocations() {
       if (error) {
         console.error(`Error creating county ${county.name}:`, error)
       } else {
-        countyMap.set(county.name, location.id)
-        locationsInserted.push(location)
+        countyMap.set(county.name, (location as any).id)
+        locationsInserted.push(location as any)
         console.log(`✅ Created county: ${county.name}`)
       }
     }
@@ -317,7 +317,7 @@ async function seedLocations() {
       const parentId = countyMap.get(city.county)
 
       const { data: location, error } = await supabaseAdmin
-        .from('locations')
+        .from('locations' as any)
         .insert({
           name: city.name,
           slug: city.slug,
@@ -338,8 +338,8 @@ async function seedLocations() {
       if (error) {
         console.error(`Error creating city ${city.name}:`, error)
       } else {
-        cityMap.set(city.name, location.id)
-        locationsInserted.push(location)
+        cityMap.set(city.name, (location as any).id)
+        locationsInserted.push(location as any)
         console.log(`✅ Created city: ${city.name}`)
       }
     }
@@ -350,7 +350,7 @@ async function seedLocations() {
 
     for (const neighbourhood of PORTSMOUTH_NEIGHBOURHOODS) {
       const { data: location, error } = await supabaseAdmin
-        .from('locations')
+        .from('locations' as any)
         .insert({
           name: neighbourhood.name,
           slug: neighbourhood.slug,
@@ -371,7 +371,7 @@ async function seedLocations() {
       if (error) {
         console.error(`Error creating neighbourhood ${neighbourhood.name}:`, error)
       } else {
-        locationsInserted.push(location)
+        locationsInserted.push(location as any)
         console.log(`✅ Created neighbourhood: ${neighbourhood.name}`)
       }
     }
@@ -380,7 +380,7 @@ async function seedLocations() {
     console.log('📮 Creating Portsmouth postcode districts...')
     for (const postcode of PORTSMOUTH_POSTCODES) {
       const { data: location, error } = await supabaseAdmin
-        .from('locations')
+        .from('locations' as any)
         .insert({
           name: postcode.name,
           slug: postcode.slug,
@@ -401,7 +401,7 @@ async function seedLocations() {
       if (error) {
         console.error(`Error creating postcode ${postcode.name}:`, error)
       } else {
-        locationsInserted.push(location)
+        locationsInserted.push(location as any)
         console.log(`✅ Created postcode district: ${postcode.name}`)
       }
     }

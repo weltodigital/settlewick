@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.settlewick.co.uk'
@@ -52,14 +52,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Get all locations for search pages
+    const supabase = createClient()
     const { data: locations } = await supabase
-      .from('locations')
+      .from('locations' as any)
       .select('slug, location_type, updated_at')
       .order('location_type')
 
     if (locations) {
       // Add for-sale location pages
-      locations.forEach(location => {
+      locations.forEach((location: any) => {
         routes.push({
           url: `${baseUrl}/for-sale/${location.slug}`,
           lastModified: location.updated_at ? new Date(location.updated_at) : new Date(),

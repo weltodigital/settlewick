@@ -22,6 +22,20 @@ async function generateComprehensiveProperties() {
 
     const properties = []
 
+    // Area multipliers for price calculation
+    const areaMultipliers: Record<string, number> = {
+      'Southsea': 1.2,
+      'Old Portsmouth': 1.4,
+      'Fratton': 0.8,
+      'Copnor': 0.9,
+      'Hilsea': 0.85,
+      'Cosham': 1.1,
+      'North End': 0.9,
+      'Eastney': 1.15,
+      'Milton': 1.0,
+      'Baffins': 0.9
+    }
+
     // Property configuration to ensure filter coverage
     const filterCoverage = {
       // Core specs coverage
@@ -93,7 +107,7 @@ async function generateComprehensiveProperties() {
       const floorAreaSqft = filterCoverage.floorAreas[i % filterCoverage.floorAreas.length]
 
       // Generate features with strategic coverage
-      const features = {
+      const features: Record<string, boolean> = {
         // Ensure at least 5 properties have each feature
         period_property: i % 10 < 5,
         modern: i % 10 < 4,
@@ -120,7 +134,7 @@ async function generateComprehensiveProperties() {
         underfloor_heating: i % 12 < 2,
         bay_windows: propertyType !== 'flat' && i % 6 < 3,
         bifold_doors: i % 8 < 3,
-        original_features: features.period_property && i % 6 < 4,
+        original_features: (i % 10 < 5) && i % 6 < 4, // Based on period_property logic
         cellar: propertyType !== 'flat' && i % 15 < 2,
         garage: parkingType === 'garage',
         outbuildings: propertyType !== 'flat' && i % 8 < 2,
@@ -135,19 +149,6 @@ async function generateComprehensiveProperties() {
       basePrice += bedrooms * (isRental ? 25000 : 6000000) // Per bedroom
       basePrice += floorAreaSqft * (isRental ? 1 : 200) // Per sqft
 
-      // Area multipliers
-      const areaMultipliers: Record<string, number> = {
-        'Southsea': 1.2,
-        'Old Portsmouth': 1.4,
-        'Fratton': 0.8,
-        'Copnor': 0.9,
-        'Hilsea': 0.85,
-        'Cosham': 1.1,
-        'North End': 0.9,
-        'Eastney': 1.15,
-        'Milton': 1.0,
-        'Baffins': 0.9
-      }
 
       basePrice *= areaMultipliers[area.name] || 1.0
       basePrice += Math.random() * basePrice * 0.2 - basePrice * 0.1 // ±10% variation
@@ -289,10 +290,10 @@ async function generateComprehensiveProperties() {
           .from('property_price_history')
           .insert({
             property_id: property.id,
-            event_type: status,
+            event_type: status as any,
             price: currentPrice,
             date: new Date(listedDate.getTime() + daysAgo * 0.7 * 24 * 60 * 60 * 1000).toISOString()
-          })
+          } as any)
       }
 
       console.log(`✅ Created property ${i + 1}/${totalProperties}: ${bedrooms}bed ${propertyType} in ${area.name} (${isRental ? 'rental' : 'sale'})`)

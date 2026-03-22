@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { MapPin, Home, TrendingUp, School, Train, Users, ChevronRight, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import Script from 'next/script'
 
 interface Location {
@@ -62,21 +62,23 @@ export default function AreaGuideTemplate({ location }: AreaGuideTemplateProps) 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
+      const supabase = createClient()
 
       // Fetch recent sold prices
       const { data: soldData } = await supabase
-        .from('sold_prices')
+        .from('sold_prices' as any)
         .select('address, price, date_sold, property_type')
         .ilike('address', `%${location.name}%`)
         .order('date_sold', { ascending: false })
         .limit(10)
 
       if (soldData) {
-        setSoldPrices(soldData)
+        setSoldPrices(soldData as unknown as SoldPrice[])
 
         // Calculate averages by property type
-        const typeAverages: Record<string, { total: number, count: number }> = {}
-        soldData.forEach(sale => {
+        const typeAverages: Record<string, { total: number; count: number }> = {}
+        const soldPricesArray = soldData as unknown as SoldPrice[]
+        soldPricesArray.forEach(sale => {
           if (!typeAverages[sale.property_type]) {
             typeAverages[sale.property_type] = { total: 0, count: 0 }
           }
@@ -104,7 +106,7 @@ export default function AreaGuideTemplate({ location }: AreaGuideTemplateProps) 
         .limit(6)
 
       if (propertiesData) {
-        setProperties(propertiesData.map(p => ({
+        setProperties((propertiesData as any[]).map((p: any) => ({
           ...p,
           primary_image_url: p.primary_image?.[0]?.image_url
         })))

@@ -267,7 +267,7 @@ export async function searchProperties(
   if (maxYearBuilt) query = query.lte('year_built', maxYearBuilt)
 
   // Rental specific filters
-  if (furnished && furnished.length > 0) {
+  if (furnished && Array.isArray(furnished) && furnished.length > 0) {
     const convertedFurnished = furnished.map(f => f.toLowerCase())
     query = query.in('furnished', convertedFurnished as any)
   }

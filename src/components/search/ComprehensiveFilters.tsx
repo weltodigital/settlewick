@@ -184,7 +184,7 @@ export default function ComprehensiveFilters({ filters, onFiltersChange, isOpen,
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-text-primary">Bathrooms</label>
                   <select
-                    value={typeof localFilters.bathrooms === 'object' ? localFilters.bathrooms?.min || '' : ''}
+                    value={typeof localFilters.bathrooms === 'object' && !Array.isArray(localFilters.bathrooms) ? (localFilters.bathrooms as { min?: number; max?: number })?.min || '' : ''}
                     onChange={(e) => {
                       const min = e.target.value ? parseInt(e.target.value) : undefined
                       handleFilterChange('bathrooms', min ? { min } : undefined)
@@ -644,7 +644,7 @@ export default function ComprehensiveFilters({ filters, onFiltersChange, isOpen,
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-text-primary">Furnished</label>
                       <select
-                        value={(localFilters.furnished || [])[0] || ''}
+                        value={Array.isArray(localFilters.furnished) ? (localFilters.furnished || [])[0] || '' : ''}
                         onChange={(e) => handleFilterChange('furnished', e.target.value ? [e.target.value] : undefined)}
                         className="input-field text-sm w-full"
                       >

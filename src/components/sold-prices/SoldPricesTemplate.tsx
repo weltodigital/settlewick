@@ -122,7 +122,7 @@ export default function SoldPricesTemplate({
         setSoldPrices([])
         setTotalResults(0)
       } else {
-        setSoldPrices(data || [])
+        setSoldPrices(data as any || [])
         setTotalResults(count || 0)
       }
 
@@ -153,7 +153,7 @@ export default function SoldPricesTemplate({
 
       if (!error && recentSales && recentSales.length > 0) {
         const totalSales = recentSales.length
-        const averagePrice = recentSales.reduce((sum, sale) => sum + sale.price, 0) / totalSales
+        const averagePrice = (recentSales as any[]).reduce((sum: number, sale: any) => sum + sale.price, 0) / totalSales
 
         // Get previous 12 months for comparison
         const twentyFourMonthsAgo = new Date()
@@ -168,7 +168,7 @@ export default function SoldPricesTemplate({
 
         let priceChange = 0
         if (previousSales && previousSales.length > 0) {
-          const previousAverage = previousSales.reduce((sum, sale) => sum + sale.price, 0) / previousSales.length
+          const previousAverage = (previousSales as any[]).reduce((sum: number, sale: any) => sum + sale.price, 0) / previousSales.length
           priceChange = ((averagePrice - previousAverage) / previousAverage) * 100
         }
 

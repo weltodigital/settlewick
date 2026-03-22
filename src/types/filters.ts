@@ -39,6 +39,8 @@ export interface PropertyFilters {
   modern?: boolean
   cottage?: boolean
   fixerUpper?: boolean
+  minYearBuilt?: number
+  maxYearBuilt?: number
   utilityRoom?: boolean
   basement?: boolean
   conservatory?: boolean
@@ -99,9 +101,13 @@ export interface PropertyFilters {
   daysOnMarketMax?: number
 
   // Rental Extras (only for lettings)
-  furnished?: Furnished[]
+  furnished?: Furnished[] | boolean
+  unfurnished?: boolean
+  partFurnished?: boolean
   petsAllowed?: boolean
   billsIncluded?: boolean
+  studentsWelcome?: boolean
+  smokers?: boolean
   depositMax?: number // pence
   availableFromDate?: string
   minTenancyMax?: number // months

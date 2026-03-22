@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Search, MapPin, Clock } from 'lucide-react'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 interface LocationSuggestion {
   id: string
@@ -41,10 +41,11 @@ export default function LocationAutocomplete({
 
   // Search locations using Supabase
   const searchLocations = async (query: string): Promise<LocationSuggestion[]> => {
+    const supabase = createClient()
     if (!query.trim()) {
       // Return popular locations when no query
       const { data, error } = await supabase
-        .from('locations')
+        .from('locations' as any)
         .select('id, name, slug, location_type, latitude, longitude, property_count_sale, property_count_rent, parent_name:locations!locations_parent_id_fkey(name)')
         .in('location_type', ['city', 'region'])
         .order('property_count_sale', { ascending: false })
@@ -55,7 +56,7 @@ export default function LocationAutocomplete({
         return []
       }
 
-      return (data || []).map(location => ({
+      return (data || []).map((location: any) => ({
         id: location.id,
         name: location.name,
         type: location.location_type as any,
@@ -69,7 +70,7 @@ export default function LocationAutocomplete({
     }
 
     // Use the autocomplete function from database
-    const { data, error } = await supabase.rpc('autocomplete_locations', {
+    const { data, error } = await supabase.rpc('autocomplete_locations' as any, {
       search_query: query,
       max_results: 10
     })
