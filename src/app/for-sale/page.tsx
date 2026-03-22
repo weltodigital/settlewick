@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
 import { generateMetadata as generateSEOMetadata } from '@/lib/seo'
-import SearchResultsClient from '@/components/search/SearchResultsClient'
+import ClientOnlySearchResults from '@/components/search/ClientOnlySearchResults'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+
+// Force this page to be dynamic to avoid SSR issues
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = generateSEOMetadata({
   title: 'Properties for Sale UK | Find Your Perfect Home | Settlewick',
@@ -48,7 +51,7 @@ export default function ForSalePage() {
           </p>
         </div>
 
-        <SearchResultsClient
+        <ClientOnlySearchResults
           location={defaultLocation}
           searchParams={{}}
           listingType="SALE"

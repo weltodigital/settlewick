@@ -304,11 +304,13 @@ export default function SoldPricesTemplate({
           <select
             value={sortBy}
             onChange={(e) => {
-              const params = new URLSearchParams(window.location.search)
-              params.set('sortBy', e.target.value)
-              params.set('page', '1')
-              window.history.pushState({}, '', `${window.location.pathname}?${params}`)
-              window.location.reload()
+              if (typeof window !== 'undefined') {
+                const params = new URLSearchParams(window.location.search)
+                params.set('sortBy', e.target.value)
+                params.set('page', '1')
+                window.history.pushState({}, '', `${window.location.pathname}?${params}`)
+                window.location.reload()
+              }
             }}
             className="bg-background border border-border rounded px-3 py-1"
           >
@@ -322,15 +324,17 @@ export default function SoldPricesTemplate({
           <select
             value={propertyType || 'all'}
             onChange={(e) => {
-              const params = new URLSearchParams(window.location.search)
-              if (e.target.value === 'all') {
-                params.delete('propertyType')
-              } else {
-                params.set('propertyType', e.target.value)
+              if (typeof window !== 'undefined') {
+                const params = new URLSearchParams(window.location.search)
+                if (e.target.value === 'all') {
+                  params.delete('propertyType')
+                } else {
+                  params.set('propertyType', e.target.value)
+                }
+                params.set('page', '1')
+                window.history.pushState({}, '', `${window.location.pathname}?${params}`)
+                window.location.reload()
               }
-              params.set('page', '1')
-              window.history.pushState({}, '', `${window.location.pathname}?${params}`)
-              window.location.reload()
             }}
             className="bg-background border border-border rounded px-3 py-1"
           >
@@ -426,10 +430,12 @@ export default function SoldPricesTemplate({
                 {currentPage > 1 && (
                   <button
                     onClick={() => {
-                      const params = new URLSearchParams(window.location.search)
-                      params.set('page', (currentPage - 1).toString())
-                      window.history.pushState({}, '', `${window.location.pathname}?${params}`)
-                      window.location.reload()
+                      if (typeof window !== 'undefined') {
+                        const params = new URLSearchParams(window.location.search)
+                        params.set('page', (currentPage - 1).toString())
+                        window.history.pushState({}, '', `${window.location.pathname}?${params}`)
+                        window.location.reload()
+                      }
                     }}
                     className="px-4 py-2 bg-surface border border-border rounded-lg hover:bg-secondary transition-colors"
                   >
@@ -444,10 +450,12 @@ export default function SoldPricesTemplate({
                 {currentPage < Math.ceil(totalResults / resultsPerPage) && (
                   <button
                     onClick={() => {
-                      const params = new URLSearchParams(window.location.search)
-                      params.set('page', (currentPage + 1).toString())
-                      window.history.pushState({}, '', `${window.location.pathname}?${params}`)
-                      window.location.reload()
+                      if (typeof window !== 'undefined') {
+                        const params = new URLSearchParams(window.location.search)
+                        params.set('page', (currentPage + 1).toString())
+                        window.history.pushState({}, '', `${window.location.pathname}?${params}`)
+                        window.location.reload()
+                      }
                     }}
                     className="px-4 py-2 bg-surface border border-border rounded-lg hover:bg-secondary transition-colors"
                   >

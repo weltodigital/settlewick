@@ -128,8 +128,10 @@ export default function SearchResultsClient({
       }
     })
 
-    const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
-    router.replace(newURL)
+    if (typeof window !== 'undefined') {
+      const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
+      router.replace(newURL)
+    }
   }
 
   const fetchProperties = async (filters: PropertyFilters) => {

@@ -82,7 +82,7 @@ export default function SaveSearchButton({ filters, total, onSaved }: SaveSearch
         body: JSON.stringify({
           name: name.trim(),
           searchCriteria: JSON.stringify(filters),
-          searchUrl: `${window.location.pathname}?${searchUrl}`,
+          searchUrl: typeof window !== 'undefined' ? `${window.location.pathname}?${searchUrl}` : '',
           alertEnabled
         })
       })
